@@ -5,9 +5,11 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -74,3 +76,6 @@ coverage/
 # Exceptions to above rules.
 !**/ios/.gitkeep
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+firebase.json
+ios/Podfile.lock
+pubspec.lock
