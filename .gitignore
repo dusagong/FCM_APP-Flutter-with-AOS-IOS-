@@ -80,3 +80,6 @@ firebase.json
 ios/Podfile.lock
 pubspec.lock
 .vscode/
+
+# BFG Repo-Cleaner reports
+..bfg-report/
