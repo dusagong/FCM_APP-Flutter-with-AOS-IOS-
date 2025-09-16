@@ -79,3 +79,4 @@ coverage/
 firebase.json
 ios/Podfile.lock
 pubspec.lock
+.vscode/
