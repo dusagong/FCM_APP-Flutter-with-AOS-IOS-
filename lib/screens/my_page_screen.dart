@@ -23,10 +23,6 @@ class MyPageScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                // Profile Section
-                _buildProfileSection(provider),
-                const SizedBox(height: 24),
-
                 // Stats Section
                 _buildStatsSection(provider),
                 const SizedBox(height: 24),
@@ -39,58 +35,6 @@ class MyPageScreen extends StatelessWidget {
         },
       ),
     );
-  }
-
-  Widget _buildProfileSection(AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppBorderRadius.xl),
-        boxShadow: AppShadows.small,
-      ),
-      child: Column(
-        children: [
-          // Avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: AppColors.primaryGradient,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: AppShadows.colored,
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              size: 40,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Name
-          Text(
-            '여행자',
-            style: AppTypography.headlineMedium,
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppBorderRadius.full),
-            ),
-            child: Text(
-              '코레일 동행열차 회원',
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildStatsSection(AppProvider provider) {

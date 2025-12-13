@@ -216,45 +216,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       return _buildLoadingView();
     }
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        CameraPreview(_controller!),
-        // 가이드 오버레이
-        Center(
-          child: Container(
-            width: 200,
-            height: 280,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
-        // 안내 텍스트
-        Positioned(
-          bottom: 20,
-          left: 0,
-          right: 0,
-          child: Text(
-            '가이드 안에 얼굴을 맞춰주세요',
-            textAlign: TextAlign.center,
-            style: AppTypography.bodySmall.copyWith(
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
+    return CameraPreview(_controller!);
   }
 
   Widget _buildLoadingView() {

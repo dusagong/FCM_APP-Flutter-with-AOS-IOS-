@@ -27,12 +27,19 @@ class MyReviewsScreen extends StatelessWidget {
             );
           }
 
-          return ListView.builder(
+          return GridView.builder(
             padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.75,
+            ),
             itemCount: reviews.length,
             itemBuilder: (context, index) {
-              return _ReviewCard(
-                review: reviews[index],
+              final review = reviews[index];
+              return _ReviewGridItem(
+                review: review,
                 index: index,
               );
             },
@@ -43,132 +50,107 @@ class MyReviewsScreen extends StatelessWidget {
   }
 }
 
-class _ReviewCard extends StatelessWidget {
+class _ReviewGridItem extends StatelessWidget {
   final Review review;
   final int index;
 
-  const _ReviewCard({
+  const _ReviewGridItem({
     required this.review,
     required this.index,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        boxShadow: AppShadows.small,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with place name
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(AppBorderRadius.lg),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                  ),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: AppColors.primary,
-                    size: 20,
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => _ReviewDetailModal(review: review),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+          boxShadow: AppShadows.small,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppBorderRadius.lg),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppBorderRadius.lg),
+                  ),
+                  child: review.imageUrls.isNotEmpty
+                      ? _buildImage(review.imageUrls.first)
+                      : Center(
+                          child: Icon(
+                            Icons.rate_review_rounded,
+                            size: 48,
+                            color: AppColors.textTertiary.withValues(alpha: 0.5),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            // Info
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        review.placeName,
-                        style: AppTypography.titleMedium,
+                      const Icon(
+                        Icons.location_on_rounded,
+                        size: 14,
+                        color: AppColors.primary,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          review.placeName,
+                          style: AppTypography.labelMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      RatingStars(rating: review.rating.toDouble(), size: 12),
+                      const SizedBox(width: 4),
                       Text(
                         review.formattedDate,
                         style: AppTypography.labelSmall,
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Rating
-                Row(
-                  children: [
-                    RatingStars(rating: review.rating.toDouble(), size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      review.rating.toString(),
-                      style: AppTypography.labelMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Images
-                if (review.imageUrls.isNotEmpty) ...[
-                  SizedBox(
-                    height: 80,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: review.imageUrls.length,
-                      itemBuilder: (context, imgIndex) {
-                        return Container(
-                          width: 80,
-                          height: 80,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppBorderRadius.sm),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(AppBorderRadius.sm),
-                            child: _buildImage(review.imageUrls[imgIndex]),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                 ],
-                // Review content
-                Text(
-                  review.content,
-                  style: AppTypography.bodyMedium,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(
-          delay: Duration(milliseconds: 100 * index),
-          duration: 300.ms,
-        ).slideY(begin: 0.1, end: 0);
+          ],
+        ),
+      ).animate().fadeIn(
+            delay: Duration(milliseconds: 100 * index),
+            duration: 300.ms,
+          ).slideY(begin: 0.1, end: 0),
+    );
   }
 
   Widget _buildImage(String imageUrl) {
@@ -176,6 +158,8 @@ class _ReviewCard extends StatelessWidget {
       return Image.network(
         imageUrl,
         fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
         errorBuilder: (_, __, ___) => Container(
           color: AppColors.surfaceVariant,
           child: const Icon(Icons.image_rounded, color: AppColors.textTertiary),
@@ -185,9 +169,164 @@ class _ReviewCard extends StatelessWidget {
       return Image.file(
         File(imageUrl),
         fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
         errorBuilder: (_, __, ___) => Container(
           color: AppColors.surfaceVariant,
           child: const Icon(Icons.image_rounded, color: AppColors.textTertiary),
+        ),
+      );
+    }
+  }
+}
+
+class _ReviewDetailModal extends StatelessWidget {
+  final Review review;
+
+  const _ReviewDetailModal({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppBorderRadius.xxl),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Close button
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Images
+                  if (review.imageUrls.isNotEmpty) ...[
+                    SizedBox(
+                      height: 250,
+                      child: PageView.builder(
+                        itemCount: review.imageUrls.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                              child: _buildImage(review.imageUrls[index]),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Place name
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          review.placeName,
+                          style: AppTypography.titleMedium.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Rating
+                  Row(
+                    children: [
+                      RatingStars(rating: review.rating.toDouble(), size: 24),
+                      const SizedBox(width: 12),
+                      Text(
+                        '${review.rating}.0',
+                        style: AppTypography.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    review.formattedDate,
+                    style: AppTypography.labelSmall,
+                  ),
+                  const SizedBox(height: 24),
+                  // Review content
+                  Text(
+                    review.content,
+                    style: AppTypography.bodyLarge,
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImage(String imageUrl) {
+    if (imageUrl.startsWith('http')) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (_, __, ___) => Container(
+          color: AppColors.surfaceVariant,
+          child: const Center(
+            child: Icon(Icons.image_rounded, color: AppColors.textTertiary, size: 48),
+          ),
+        ),
+      );
+    } else {
+      return Image.file(
+        File(imageUrl),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (_, __, ___) => Container(
+          color: AppColors.surfaceVariant,
+          child: const Center(
+            child: Icon(Icons.image_rounded, color: AppColors.textTertiary, size: 48),
+          ),
         ),
       );
     }
