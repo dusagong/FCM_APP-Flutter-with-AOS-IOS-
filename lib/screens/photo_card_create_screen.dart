@@ -26,6 +26,12 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
   String? _selectedCity;
 
   @override
+  void initState() {
+    super.initState();
+    _messageController.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _messageController.dispose();
     _customTagController.dispose();
@@ -79,7 +85,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
   }
 
   bool get _canCreate {
-    return _selectedHashtags.isNotEmpty &&
+    return _messageController.text.trim().isNotEmpty &&
         _selectedProvince != null &&
         _selectedCity != null;
   }
@@ -171,17 +177,19 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
             const SizedBox(width: 8),
             Text('여행 메시지', style: AppTypography.titleMedium),
             const SizedBox(width: 8),
-            Text('(선택)', style: AppTypography.bodySmall),
+            Text('(필수)', style: AppTypography.bodySmall.copyWith(color: AppColors.secondary)),
           ],
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _messageController,
           maxLength: 50,
+          maxLines: 3,
+          minLines: 3,
           decoration: InputDecoration(
-            hintText: '예: 강릉에서의 특별한 하루',
             filled: true,
             fillColor: AppColors.surface,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppBorderRadius.md),
               borderSide: const BorderSide(color: AppColors.border),
@@ -210,7 +218,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
             const SizedBox(width: 8),
             Text('여행 스타일', style: AppTypography.titleMedium),
             const SizedBox(width: 8),
-            Text('(필수)', style: AppTypography.bodySmall.copyWith(color: AppColors.secondary)),
+            Text('(선택)', style: AppTypography.bodySmall),
           ],
         ),
         const SizedBox(height: 12),
