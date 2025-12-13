@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
+import '../services/travel_api_service.dart';
+import '../services/photo_card_storage_service.dart';
 
 class AppProvider extends ChangeNotifier {
   final _uuid = const Uuid();
@@ -44,6 +46,29 @@ class AppProvider extends ChangeNotifier {
 
   AppProvider() {
     _initSampleData();
+    _loadPhotoCardsFromStorage();
+  }
+
+  /// SharedPreferences에서 PhotoCard 로드
+  Future<void> _loadPhotoCardsFromStorage() async {
+    try {
+      final storedCards = await PhotoCardStorageService.getAllPhotoCards();
+      if (storedCards.isNotEmpty) {
+        _photoCards = storedCards;
+
+        // 현재 PhotoCard 설정
+        final currentCard = await PhotoCardStorageService.getCurrentPhotoCard();
+        if (currentCard != null) {
+          _currentPhotoCard = currentCard;
+          _currentProvince = currentCard.province;
+          _currentCity = currentCard.city;
+        }
+
+        notifyListeners();
+      }
+    } catch (e) {
+      print('PhotoCard 로드 에러: $e');
+    }
   }
 
   void _initSampleData() {
@@ -240,15 +265,106 @@ class AppProvider extends ChangeNotifier {
   }
 
   // Photo Card Methods
+
+  /// PhotoCard 생성 (API 연동)
+  /// 1. 서버에 PhotoCard 생성 요청
+  /// 2. 서버에서 받은 ID로 PhotoCard 생성
+  /// 3. SharedPreferences에 저장
+  Future<PhotoCard> createPhotoCardWithAPI({
+    required String province,
+    required String city,
+    required String message,
+    required List<String> hashtags,
+    required String aiQuote,
+    String? imagePath,
+  }) async {
+    try {
+      // 1. 서버에 PhotoCard 생성 요청
+      final response = await TravelApiService.createPhotoCard(
+        province: province,
+        city: city,
+        message: message,
+        hashtags: hashtags,
+        aiQuote: aiQuote,
+        imagePath: imagePath,
+      );
+
+      // 2. 서버 응답으로 PhotoCard 객체 생성
+      final photoCard = PhotoCard(
+        id: response['id'],
+        province: province,
+        city: city,
+        message: message,
+        hashtags: hashtags,
+        aiQuote: aiQuote,
+        imagePath: imagePath,
+        createdAt: DateTime.parse(response['created_at']),
+        isDefault: false,
+      );
+
+      // 3. SharedPreferences에 저장
+      await PhotoCardStorageService.savePhotoCard(photoCard);
+
+      // 4. 메모리에 추가
+      _photoCards.insert(0, photoCard);
+      _currentPhotoCard = photoCard;
+      _currentProvince = province;
+      _currentCity = city;
+
+      notifyListeners();
+      return photoCard;
+    } catch (e) {
+      throw Exception('PhotoCard 생성 실패: $e');
+    }
+  }
+
+  /// PhotoCard 추가 (로컬 전용 - 이전 버전 호환)
   void addPhotoCard(PhotoCard card) {
     _photoCards.insert(0, card);
     notifyListeners();
+  }
+
+  /// PhotoCard 삭제
+  /// 1. 로컬 스토리지에서 삭제
+  /// 2. 메모리에서 삭제
+  /// 참고: 서버 비활성화는 별도 호출 필요 없음 (로컬 디바이스 기반)
+  Future<void> deletePhotoCard(String photoCardId) async {
+    try {
+      // 1. 로컬 스토리지에서 삭제
+      await PhotoCardStorageService.deletePhotoCard(photoCardId);
+
+      // 2. 메모리에서 삭제
+      _photoCards.removeWhere((card) => card.id == photoCardId);
+
+      // 3. 현재 PhotoCard가 삭제된 경우 초기화
+      if (_currentPhotoCard?.id == photoCardId) {
+        _currentPhotoCard = null;
+        _currentProvince = null;
+        _currentCity = null;
+      }
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception('PhotoCard 삭제 실패: $e');
+    }
+  }
+
+  /// PhotoCard 검증 (만남승강장 접근 전)
+  /// 서버에서 PhotoCard가 유효한지 확인
+  Future<bool> verifyPhotoCard(String photoCardId) async {
+    try {
+      return await TravelApiService.verifyPhotoCard(photoCardId);
+    } catch (e) {
+      print('PhotoCard 검증 에러: $e');
+      return false;
+    }
   }
 
   void setCurrentPhotoCard(PhotoCard card) {
     _currentPhotoCard = card;
     _currentProvince = card.province;
     _currentCity = card.city;
+    PhotoCardStorageService.setCurrentPhotoCard(card.id);
     notifyListeners();
   }
 

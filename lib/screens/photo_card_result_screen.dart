@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../widgets/common_widgets.dart';
+import '../services/travel_api_service.dart';
 import 'meeting_platform_screen.dart';
 
 class PhotoCardResultScreen extends StatefulWidget {
@@ -70,15 +71,60 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
     );
   }
 
-  void _goToMeetingPlatform() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MeetingPlatformScreen(
-          photoCard: widget.photoCard,
-        ),
+  Future<void> _goToMeetingPlatform() async {
+    // 로딩 표시
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
+
+    try {
+      // PhotoCard 검증 API 호출
+      final isValid = await TravelApiService.verifyPhotoCard(widget.photoCard.id);
+
+      if (!mounted) return;
+
+      // 로딩 다이얼로그 닫기
+      Navigator.pop(context);
+
+      if (isValid) {
+        // 검증 성공: 만남승강장으로 이동
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MeetingPlatformScreen(
+              photoCard: widget.photoCard,
+            ),
+          ),
+        );
+      } else {
+        // 검증 실패: 사용자에게 알림
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('유효하지 않은 포토카드입니다. 다시 생성해주세요.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      // 로딩 다이얼로그 닫기
+      Navigator.pop(context);
+
+      // 에러 처리
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('포토카드 검증 중 오류가 발생했습니다: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   @override

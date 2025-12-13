@@ -34,37 +34,43 @@ class _PhotoCardLoadingScreenState extends State<PhotoCardLoadingScreen> {
   }
 
   Future<void> _generatePhotoCard() async {
-    // Simulate AI processing time
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (!mounted) return;
-
     final provider = context.read<AppProvider>();
-    final aiQuote = provider.generateAIQuote();
-    final id = provider.generateId();
 
-    final photoCard = PhotoCard(
-      id: id,
-      imagePath: widget.imagePath,
-      message: widget.message.isEmpty ? '특별한 여행의 순간' : widget.message,
-      hashtags: widget.hashtags,
-      province: widget.province,
-      city: widget.city,
-      aiQuote: aiQuote,
-      createdAt: DateTime.now(),
-    );
+    try {
+      // API 호출: 서버에 PhotoCard 생성 요청 + 로컬 저장
+      final photoCard = await provider.createPhotoCardWithAPI(
+        province: widget.province,
+        city: widget.city,
+        message: widget.message.isEmpty ? '특별한 여행의 순간' : widget.message,
+        hashtags: widget.hashtags,
+        aiQuote: provider.generateAIQuote(), // 로컬에서 랜덤 선택
+        imagePath: widget.imagePath,
+      );
 
-    provider.addPhotoCard(photoCard);
-    provider.setCurrentPhotoCard(photoCard);
+      if (!mounted) return;
 
-    if (!mounted) return;
+      // 성공: 결과 화면으로 이동
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PhotoCardResultScreen(photoCard: photoCard),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PhotoCardResultScreen(photoCard: photoCard),
-      ),
-    );
+      // 에러 처리: 사용자에게 알림
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('PhotoCard 생성 실패: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+
+      // 이전 화면으로 돌아가기
+      Navigator.pop(context);
+    }
   }
 
   @override
