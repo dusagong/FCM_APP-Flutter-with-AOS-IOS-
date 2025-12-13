@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Fcmtestapp</string>
+	<string>코레일 동행열차</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>fcmtestapp</string>
+	<string>코레일 동행열차</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -45,14 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<!-- FCM Background modes -->
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>background-processing</string>
-		<string>remote-notification</string>
-	</array>
-	<!-- Firebase App Check -->
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
+	<!-- Camera Permission -->
+	<key>NSCameraUsageDescription</key>
+	<string>포토카드를 만들기 위해 카메라 접근이 필요합니다.</string>
+	<!-- Photo Library Permission -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>포토카드에 사용할 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>포토카드를 저장하기 위해 사진 라이브러리 접근이 필요합니다.</string>
 </dict>
 </plist>
