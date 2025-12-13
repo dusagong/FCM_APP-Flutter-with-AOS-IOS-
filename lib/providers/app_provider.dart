@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/travel_api_service.dart';
 import '../services/photo_card_storage_service.dart';
+import '../data/mock/mock_data.dart';
 
 
 class AppProvider extends ChangeNotifier {
