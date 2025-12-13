@@ -37,6 +37,9 @@ dependencies:
   # UUID for unique IDs
   uuid: ^4.3.3
 
+  # HTTP client
+  http: ^1.2.0
+
   # Share
   share_plus: ^7.2.2
 

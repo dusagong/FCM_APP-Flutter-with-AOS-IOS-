@@ -337,7 +337,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
             border: Border.all(color: AppColors.border),
           ),
           child: DropdownButtonFormField<String>(
-            initialValue: _selectedProvince,
+            value: _selectedProvince,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
@@ -367,7 +367,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
             border: Border.all(color: AppColors.border),
           ),
           child: DropdownButtonFormField<String>(
-            initialValue: _selectedCity,
+            value: _selectedCity,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
