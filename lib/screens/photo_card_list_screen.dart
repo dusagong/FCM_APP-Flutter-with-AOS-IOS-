@@ -7,6 +7,7 @@ import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/common_widgets.dart';
 import 'camera_screen.dart';
+import 'meeting_platform_screen.dart';
 
 class PhotoCardListScreen extends StatelessWidget {
   const PhotoCardListScreen({super.key});
@@ -386,6 +387,22 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
             icon: Icons.share_rounded,
             onPressed: () {
               // Share functionality
+            },
+          ),
+          const SizedBox(height: 12),
+          PrimaryButton(
+            text: '만남승강장으로 이동',
+            icon: Icons.door_sliding_rounded,
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MeetingPlatformScreen(
+                    photoCard: widget.photoCard,
+                  ),
+                ),
+              );
             },
           ),
         ],
