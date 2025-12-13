@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import 'photo_card_create_screen.dart';
@@ -12,29 +13,116 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
-  final ImagePicker _picker = ImagePicker();
-  XFile? _capturedImage;
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+  CameraController? _controller;
+  List<CameraDescription>? _cameras;
+  bool _isInitialized = false;
   bool _isCapturing = false;
+  bool _isFrontCamera = true;
+  XFile? _capturedImage;
+  String? _errorMessage;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      _controller?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      _cameras = await availableCameras();
+
+      if (_cameras == null || _cameras!.isEmpty) {
+        setState(() {
+          _errorMessage = '카메라를 찾을 수 없습니다';
+          _isInitialized = false;
+        });
+        return;
+      }
+
+      // 전면 카메라 선택 (없으면 후면)
+      CameraDescription selectedCamera = _cameras!.first;
+      for (var camera in _cameras!) {
+        if (_isFrontCamera && camera.lensDirection == CameraLensDirection.front) {
+          selectedCamera = camera;
+          break;
+        } else if (!_isFrontCamera && camera.lensDirection == CameraLensDirection.back) {
+          selectedCamera = camera;
+          break;
+        }
+      }
+
+      _controller = CameraController(
+        selectedCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
+
+      await _controller!.initialize();
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+          _errorMessage = null;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = '카메라 초기화 실패: $e';
+        _isInitialized = false;
+      });
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    setState(() {
+      _isFrontCamera = !_isFrontCamera;
+      _isInitialized = false;
+    });
+    await _controller?.dispose();
+    await _initializeCamera();
+  }
 
   Future<void> _takePicture() async {
+    if (_controller == null || !_controller!.value.isInitialized || _isCapturing) {
+      return;
+    }
+
     setState(() => _isCapturing = true);
 
     try {
-      final XFile? photo = await _picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.front,
-        maxWidth: 1080,
-        maxHeight: 1920,
-        imageQuality: 90,
-      );
-
-      if (photo != null) {
-        setState(() => _capturedImage = photo);
-      }
+      final XFile photo = await _controller!.takePicture();
+      setState(() {
+        _capturedImage = photo;
+      });
     } catch (e) {
-      // If camera not available, try gallery
-      _pickFromGallery();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('촬영 실패: $e')),
+        );
+      }
     } finally {
       setState(() => _isCapturing = false);
     }
@@ -108,36 +196,115 @@ class _CameraScreenState extends State<CameraScreen> {
               color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(AppBorderRadius.xl),
             ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.camera_alt_rounded,
-                    size: 80,
-                    color: AppColors.textTertiary.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '커플 사진을 촬영해보세요',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '특별한 추억을 포토카드로 만들어 드려요',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(duration: 500.ms),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+              child: _buildCameraPreview(),
             ),
           ),
         ),
         _buildCameraControls(),
       ],
+    );
+  }
+
+  Widget _buildCameraPreview() {
+    if (_errorMessage != null) {
+      return _buildErrorView();
+    }
+
+    if (!_isInitialized || _controller == null) {
+      return _buildLoadingView();
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CameraPreview(_controller!),
+        // 가이드 오버레이
+        Center(
+          child: Container(
+            width: 200,
+            height: 280,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+        // 안내 텍스트
+        Positioned(
+          bottom: 20,
+          left: 0,
+          right: 0,
+          child: Text(
+            '가이드 안에 얼굴을 맞춰주세요',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingView() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(color: AppColors.primary),
+          const SizedBox(height: 16),
+          Text(
+            '카메라 준비 중...',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.camera_alt_rounded,
+            size: 80,
+            color: AppColors.textTertiary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? '카메라를 사용할 수 없습니다',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textTertiary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _pickFromGallery,
+            icon: const Icon(Icons.photo_library_rounded),
+            label: const Text('갤러리에서 선택'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ).animate().fadeIn(duration: 500.ms),
     );
   }
 
@@ -154,7 +321,7 @@ class _CameraScreenState extends State<CameraScreen> {
           ),
           // Capture button
           GestureDetector(
-            onTap: _isCapturing ? null : _takePicture,
+            onTap: (_isInitialized && !_isCapturing) ? _takePicture : null,
             child: Container(
               width: 80,
               height: 80,
@@ -168,7 +335,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   height: 64,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _isCapturing ? Colors.grey : Colors.white,
+                    color: (_isInitialized && !_isCapturing) ? Colors.white : Colors.grey,
                   ),
                   child: _isCapturing
                       ? const Padding(
@@ -183,10 +350,10 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
           ),
-          // Flip camera (placeholder)
+          // Flip camera
           _buildControlButton(
             icon: Icons.flip_camera_ios_rounded,
-            onTap: () {},
+            onTap: _isInitialized ? _switchCamera : null,
           ),
         ],
       ),
@@ -195,7 +362,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Widget _buildControlButton({
     required IconData icon,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -204,9 +371,13 @@ class _CameraScreenState extends State<CameraScreen> {
         height: 48,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withValues(alpha: onTap != null ? 0.2 : 0.1),
         ),
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: Icon(
+          icon,
+          color: Colors.white.withValues(alpha: onTap != null ? 1.0 : 0.5),
+          size: 24,
+        ),
       ),
     );
   }
