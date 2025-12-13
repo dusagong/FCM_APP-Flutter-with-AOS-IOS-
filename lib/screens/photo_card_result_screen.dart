@@ -209,20 +209,23 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
               ),
             ),
             child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.train_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'KORAIL LOVE PHOTO CARD',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.train_rounded, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'KORAIL LOVE PHOTO CARD',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -291,7 +294,7 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
           // Destination
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            margin: const EdgeInsets.only(bottom: 20),
+            margin: const EdgeInsets.only(bottom: 20, left: 16, right: 16),
             decoration: BoxDecoration(
               color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(AppBorderRadius.full),
@@ -302,11 +305,14 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
                 const Icon(Icons.location_on_rounded,
                     color: AppColors.primary, size: 16),
                 const SizedBox(width: 4),
-                Text(
-                  widget.photoCard.destination,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    widget.photoCard.destination,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
