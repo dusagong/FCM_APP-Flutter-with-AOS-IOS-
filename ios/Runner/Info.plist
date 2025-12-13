@@ -28,6 +28,8 @@
 	<true/>
 	<key>NMFClientId</key>
 	<string>i3u5xqm6it</string>
+	<key>NMFNcpKeyId</key>
+	<string>i3u5xqm6it</string>
 	<key>NSCameraUsageDescription</key>
 	<string>포토카드를 만들기 위해 카메라 접근이 필요합니다.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
