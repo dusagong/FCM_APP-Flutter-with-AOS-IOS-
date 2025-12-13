@@ -1,12 +1,16 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../widgets/common_widgets.dart';
-import 'meeting_platform_screen.dart';
+import 'meeting_platform_loading_screen.dart';
 
 class PhotoCardResultScreen extends StatefulWidget {
   final PhotoCard photoCard;
@@ -27,6 +31,8 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
   bool _showFront = true;
+  bool _isSharing = false;
+  final GlobalKey _cardKey = GlobalKey();
 
   @override
   void initState() {
@@ -55,26 +61,66 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
     setState(() => _showFront = !_showFront);
   }
 
-  void _shareCard(BuildContext context) {
-    final box = context.findRenderObject() as RenderBox?;
-    Share.share(
-      '코레일 동행열차와 함께한 특별한 여행!\n\n'
-      '${widget.photoCard.message}\n\n'
-      '"${widget.photoCard.aiQuote}"\n\n'
-      '📍 ${widget.photoCard.destination}\n'
-      '${widget.photoCard.hashtags.map((t) => '#$t').join(' ')}\n\n'
-      '#코레일동행열차 #러브포토카드',
-      sharePositionOrigin: box != null
-          ? box.localToGlobal(Offset.zero) & box.size
-          : Rect.zero,
-    );
+  Future<void> _shareCard(BuildContext context) async {
+    if (_isSharing) return;
+
+    setState(() => _isSharing = true);
+
+    try {
+      // 다음 프레임까지 기다림
+      await SchedulerBinding.instance.endOfFrame;
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // 카드 위젯을 이미지로 캡처
+      final boundary = _cardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        throw Exception('캡처할 수 없습니다');
+      }
+
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception('이미지 변환 실패');
+      }
+
+      // 임시 파일로 저장
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'photocard_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+
+      // 파일이 존재하는지 확인
+      final fileSize = await file.length();
+      debugPrint('File created: ${file.path}, size: $fileSize bytes');
+
+      if (fileSize == 0) {
+        throw Exception('파일이 비어있습니다');
+      }
+
+      // 공유
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '${widget.photoCard.message}\n\n#코레일동행열차 #${widget.photoCard.city} ${widget.photoCard.hashtags.map((t) => '#$t').join(' ')}',
+      );
+    } catch (e) {
+      debugPrint('Share error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('공유에 실패했습니다: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
   }
 
   void _goToMeetingPlatform() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => MeetingPlatformScreen(
+        builder: (_) => MeetingPlatformLoadingScreen(
           photoCard: widget.photoCard,
         ),
       ),
@@ -103,26 +149,29 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
                 padding: const EdgeInsets.all(24),
                 child: GestureDetector(
                   onTap: _flipCard,
-                  child: AnimatedBuilder(
-                    animation: _flipAnimation,
-                    builder: (context, child) {
-                      final angle = _flipAnimation.value * math.pi;
-                      final isFront = angle < math.pi / 2;
+                  child: RepaintBoundary(
+                    key: _cardKey,
+                    child: AnimatedBuilder(
+                      animation: _flipAnimation,
+                      builder: (context, child) {
+                        final angle = _flipAnimation.value * math.pi;
+                        final isFront = angle < math.pi / 2;
 
-                      return Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001)
-                          ..rotateY(angle),
-                        child: isFront
-                            ? _buildFrontCard()
-                            : Transform(
-                                alignment: Alignment.center,
-                                transform: Matrix4.identity()..rotateY(math.pi),
-                                child: _buildBackCard(),
-                              ),
-                      );
-                    },
+                        return Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateY(angle),
+                          child: isFront
+                              ? _buildFrontCard()
+                              : Transform(
+                                  alignment: Alignment.center,
+                                  transform: Matrix4.identity()..rotateY(math.pi),
+                                  child: _buildBackCard(),
+                                ),
+                        );
+                      },
+                    ),
                   ),
                 ).animate().fadeIn(duration: 500.ms).scale(
                       begin: const Offset(0.9, 0.9),
@@ -364,12 +413,10 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
           const SizedBox(height: 12),
 
           // Share Button
-          Builder(
-            builder: (buttonContext) => SecondaryButton(
-              text: 'SNS 공유하기',
-              icon: Icons.share_rounded,
-              onPressed: () => _shareCard(buttonContext),
-            ),
+          SecondaryButton(
+            text: _isSharing ? '공유 준비 중...' : 'SNS 공유하기',
+            icon: _isSharing ? Icons.hourglass_empty_rounded : Icons.share_rounded,
+            onPressed: _isSharing ? null : () => _shareCard(context),
           ),
 
           if (widget.showMeetingPlatformButton) ...[
