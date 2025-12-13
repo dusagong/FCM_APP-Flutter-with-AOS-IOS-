@@ -53,5 +53,8 @@
 	<string>포토카드에 사용할 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>포토카드를 저장하기 위해 사진 라이브러리 접근이 필요합니다.</string>
+	<!-- Naver Map -->
+	<key>NMFClientId</key>
+	<string>i3u5xqm6it</string>
 </dict>
 </plist>

@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'theme/app_theme.dart';
 import 'providers/app_provider.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
+  // Initialize Naver Map
+  await NaverMapSdk.instance.initialize(
+    clientId: dotenv.env['NAVER_MAP_CLIENT_ID']!,
+  );
 
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([
@@ -35,7 +45,7 @@ class KorailDonghaengApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppProvider(),
       child: MaterialApp(
-        title: 'T| ى�(',
+        title: '코레일 동행열차',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const HomeScreen(),

@@ -95,6 +95,8 @@ class AppProvider extends ChangeNotifier {
         province: '강원도',
         city: '강릉시',
         couponDescription: '아메리카노 1+1',
+        latitude: 37.7735,
+        longitude: 128.9473,
       ),
       Place(
         id: 'place_2',
@@ -107,6 +109,8 @@ class AppProvider extends ChangeNotifier {
         province: '강원도',
         city: '강릉시',
         couponDescription: '순두부 10% 할인',
+        latitude: 37.8011,
+        longitude: 128.9151,
       ),
       Place(
         id: 'place_3',
@@ -118,6 +122,8 @@ class AppProvider extends ChangeNotifier {
         imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
         province: '강원도',
         city: '강릉시',
+        latitude: 37.6902,
+        longitude: 129.0345,
       ),
       Place(
         id: 'place_4',
@@ -129,6 +135,8 @@ class AppProvider extends ChangeNotifier {
         imageUrl: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400',
         province: '강원도',
         city: '강릉시',
+        latitude: 37.7785,
+        longitude: 128.8767,
       ),
       // 부산
       Place(
@@ -141,6 +149,8 @@ class AppProvider extends ChangeNotifier {
         imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400',
         province: '부산광역시',
         city: '해운대구',
+        latitude: 35.1587,
+        longitude: 129.1604,
       ),
       Place(
         id: 'place_6',
@@ -153,6 +163,8 @@ class AppProvider extends ChangeNotifier {
         province: '부산광역시',
         city: '수영구',
         couponDescription: '모듬회 15% 할인',
+        latitude: 35.1531,
+        longitude: 129.1186,
       ),
       // 경주
       Place(
@@ -165,6 +177,8 @@ class AppProvider extends ChangeNotifier {
         imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
         province: '경상북도',
         city: '경주시',
+        latitude: 35.7905,
+        longitude: 129.3316,
       ),
       // 전주
       Place(
@@ -178,6 +192,8 @@ class AppProvider extends ChangeNotifier {
         province: '전라북도',
         city: '전주시',
         couponDescription: '전통차 세트 20% 할인',
+        latitude: 35.8151,
+        longitude: 127.1528,
       ),
     ];
 
