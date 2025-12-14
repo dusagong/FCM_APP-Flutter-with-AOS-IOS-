@@ -635,10 +635,21 @@ class _ReviewPromptModal extends StatelessWidget {
                     final provider = context.read<AppProvider>();
                     final place = provider.getPlaceById(coupon.placeId);
                     if (place != null) {
+                      // 기존 Place 모델이 있는 경우
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => ReviewWriteScreen(place: place),
+                        ),
+                      );
+                    } else {
+                      // API 장소용 쿠폰인 경우 (Place 모델 없음)
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReviewWriteScreen(
+                            placeName: coupon.placeName,
+                          ),
                         ),
                       );
                     }

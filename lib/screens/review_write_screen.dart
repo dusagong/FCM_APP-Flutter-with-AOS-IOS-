@@ -10,14 +10,22 @@ import '../providers/app_provider.dart';
 import '../widgets/common_widgets.dart';
 
 class ReviewWriteScreen extends StatefulWidget {
-  final Place place;
+  final Place? place;
+  final String? placeName;
+  final String? placeCategory;
   final bool fromReviewablePlaces;
 
   const ReviewWriteScreen({
     super.key,
-    required this.place,
+    this.place,
+    this.placeName,
+    this.placeCategory,
     this.fromReviewablePlaces = false,
-  });
+  }) : assert(place != null || placeName != null, 'place 또는 placeName 중 하나는 필수입니다');
+
+  String get displayName => place?.name ?? placeName ?? '';
+  String get placeId => place?.id ?? 'api_$displayName';
+  String get displayLocation => place?.location ?? '';
 
   @override
   State<ReviewWriteScreen> createState() => _ReviewWriteScreenState();
@@ -84,8 +92,8 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
     final provider = context.read<AppProvider>();
     final review = Review(
       id: const Uuid().v4(),
-      placeId: widget.place.id,
-      placeName: widget.place.name,
+      placeId: widget.placeId,
+      placeName: widget.displayName,
       rating: _rating,
       content: _contentController.text.trim(),
       imageUrls: _selectedImages.map((x) => x.path).toList(),
@@ -170,14 +178,16 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.place.name,
+                  widget.displayName,
                   style: AppTypography.titleMedium,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.place.location,
-                  style: AppTypography.bodySmall,
-                ),
+                if (widget.displayLocation.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.displayLocation,
+                    style: AppTypography.bodySmall,
+                  ),
+                ],
               ],
             ),
           ),

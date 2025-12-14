@@ -470,12 +470,198 @@ class _CourseStopItem extends StatelessWidget {
                       ],
                     ),
                   ],
+                  // 리뷰보기/쿠폰받기 버튼
+                  const SizedBox(height: 12),
+                  _CourseStopActionButtons(stop: stop),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 코스 정차지용 액션 버튼
+class _CourseStopActionButtons extends StatelessWidget {
+  final CourseStop stop;
+
+  const _CourseStopActionButtons({required this.stop});
+
+  void _showCouponReceivedModal(BuildContext context, String placeName) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: AppColors.primary,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '쿠폰을 받았습니다!',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.store_rounded, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        placeName,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '쿠폰함에서 확인하고\n매장에서 사용해보세요!',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                        ),
+                      ),
+                      child: const Text('닫기', style: TextStyle(color: AppColors.primary)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CouponScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('쿠폰함 보기'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppProvider>(
+      builder: (context, provider, _) {
+        final hasCoupon = provider.hasCouponByName(stop.name);
+        // 관광지만 제외하고 쿠폰받기 가능
+        final hasCouponCategory = stop.category != '관광지';
+
+        return Row(
+          children: [
+            _ActionButton(
+              label: '리뷰보기',
+              icon: Icons.rate_review_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReviewListScreen(
+                      placeName: stop.name,
+                      placeCategory: stop.category,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            if (hasCouponCategory)
+              _ActionButton(
+                label: hasCoupon ? '쿠폰받음' : '쿠폰받기',
+                icon: hasCoupon ? Icons.check_circle : Icons.local_offer_outlined,
+                isPrimary: !hasCoupon,
+                isDisabled: hasCoupon,
+                onTap: hasCoupon
+                    ? null
+                    : () {
+                        provider.addCouponByName(stop.name, stop.category ?? '장소');
+                        _showCouponReceivedModal(context, stop.name);
+                      },
+              )
+            else
+              _ActionButton(
+                label: '리뷰작성',
+                icon: Icons.edit_outlined,
+                isPrimary: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReviewWriteScreen(
+                        placeName: stop.name,
+                        placeCategory: stop.category,
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -823,7 +1009,7 @@ class _PlaceActionButtons extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppBorderRadius.md),
                         ),
@@ -1179,6 +1365,9 @@ class _SpotCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                // 리뷰보기/쿠폰받기 버튼
+                const SizedBox(height: 12),
+                _SpotActionButtons(spot: spot),
               ],
             ),
           ),
@@ -1188,6 +1377,189 @@ class _SpotCard extends StatelessWidget {
           delay: Duration(milliseconds: 100 * index),
           duration: 300.ms,
         ).slideY(begin: 0.1, end: 0);
+  }
+}
+
+/// 전체 목록 장소용 액션 버튼
+class _SpotActionButtons extends StatelessWidget {
+  final SpotWithLocation spot;
+
+  const _SpotActionButtons({required this.spot});
+
+  void _showCouponReceivedModal(BuildContext context, String placeName) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: AppColors.primary,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '쿠폰을 받았습니다!',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.store_rounded, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        placeName,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '쿠폰함에서 확인하고\n매장에서 사용해보세요!',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                        ),
+                      ),
+                      child: const Text('닫기', style: TextStyle(color: AppColors.primary)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CouponScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('쿠폰함 보기'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppProvider>(
+      builder: (context, provider, _) {
+        final hasCoupon = provider.hasCouponByName(spot.name);
+        // 관광지만 제외하고 쿠폰받기 가능
+        final hasCouponCategory = spot.category != '관광지';
+
+        return Row(
+          children: [
+            _ActionButton(
+              label: '리뷰보기',
+              icon: Icons.rate_review_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReviewListScreen(
+                      placeName: spot.name,
+                      placeCategory: spot.category,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            if (hasCouponCategory)
+              _ActionButton(
+                label: hasCoupon ? '쿠폰받음' : '쿠폰받기',
+                icon: hasCoupon ? Icons.check_circle : Icons.local_offer_outlined,
+                isPrimary: !hasCoupon,
+                isDisabled: hasCoupon,
+                onTap: hasCoupon
+                    ? null
+                    : () {
+                        provider.addCouponByName(spot.name, spot.category ?? '장소');
+                        _showCouponReceivedModal(context, spot.name);
+                      },
+              )
+            else
+              _ActionButton(
+                label: '리뷰작성',
+                icon: Icons.edit_outlined,
+                isPrimary: true,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReviewWriteScreen(
+                        placeName: spot.name,
+                        placeCategory: spot.category,
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
+    );
   }
 }
 
