@@ -90,24 +90,72 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppBorderRadius.full),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(AppBorderRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600),
+        labelStyle: AppTypography.labelMedium.copyWith(
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
         tabs: const [
-          Tab(text: '코스'),
-          Tab(text: '전체'),
-          Tab(text: '지도'),
+          Tab(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.timeline_rounded, size: 18),
+                SizedBox(width: 6),
+                Text('코스'),
+              ],
+            ),
+          ),
+          Tab(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.grid_view_rounded, size: 18),
+                SizedBox(width: 6),
+                Text('전체'),
+              ],
+            ),
+          ),
+          Tab(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.map_rounded, size: 18),
+                SizedBox(width: 6),
+                Text('지도'),
+              ],
+            ),
+          ),
         ],
       ),
     );
