@@ -19,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: WaveBackground(
+        child: _RailBackground(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
@@ -45,29 +45,91 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        // Train Icon with animation
+        // Ticket Station Icon with animation
         Container(
-          width: 100,
-          height: 100,
+          width: 120,
+          height: 120,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: AppColors.primaryGradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: AppShadows.colored,
-          ),
-          child: const Icon(
-            Icons.train_rounded,
-            size: 56,
             color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Ticket booth stripes
+              Positioned(
+                top: 0,
+                child: Container(
+                  width: 120,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                ),
+              ),
+              // Main Icon
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.train_rounded,
+                      size: 40,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'STATION',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+              // Bottom perforation
+              Positioned(
+                bottom: -10,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    8,
+                    (index) => Container(
+                      width: 10,
+                      height: 10,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: const BoxDecoration(
+                        color: AppColors.background,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         )
             .animate()
             .fadeIn(duration: 600.ms)
-            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
-        const SizedBox(height: 24),
+            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1))
+            .shimmer(delay: 1000.ms, duration: 1500.ms, color: Colors.white.withOpacity(0.5)),
+        const SizedBox(height: 32),
         // Title
         Text(
           '코레일 동행열차',
@@ -118,12 +180,14 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: AppShadows.small,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.credit_card_rounded,
+                Icons.confirmation_number_outlined,
                 color: AppColors.primary,
                 size: 20,
               ),
@@ -157,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         SecondaryButton(
           text: '레일필름 목록',
-          icon: Icons.photo_library_rounded,
+          icon: Icons.confirmation_number_rounded, // Changed to ticket icon
           onPressed: () {
             Navigator.push(
               context,
@@ -173,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildStatItem(
-                  Icons.credit_card_rounded,
+                  Icons.confirmation_number_rounded,
                   '${provider.photoCardCount}',
                   '레일필름',
                   color: AppColors.primary,
@@ -236,4 +300,76 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
+
+class _RailBackground extends StatelessWidget {
+  final Widget child;
+
+  const _RailBackground({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Gradient Sky
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFE3F2FD), // Light Blue
+                Color(0xFFF3E5F5), // Light Purple
+                AppColors.background, // Normal Background
+              ],
+              stops: [0.0, 0.4, 0.6],
+            ),
+          ),
+        ),
+        // Rail Tracks Pattern
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.05,
+            child: CustomPaint(
+              painter: _RailTrackPainter(),
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _RailTrackPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.primary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    // Draw simple curves representing tracks
+    final path = Path();
+    path.moveTo(0, size.height * 0.2);
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      size.height * 0.3,
+      size.width,
+      size.height * 0.1,
+    );
+    
+    path.moveTo(0, size.height * 0.8);
+    path.quadraticBezierTo(
+      size.width * 0.5,
+      size.height * 0.85,
+      size.width,
+      size.height * 0.7,
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

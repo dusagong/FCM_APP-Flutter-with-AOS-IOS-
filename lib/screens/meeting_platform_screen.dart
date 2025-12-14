@@ -283,38 +283,56 @@ class _PlaceItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline
-          Column(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '$index',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          // Rail Track Timeline
+          SizedBox(
+            width: 40,
+            child: Column(
+              children: [
+                // Station Node
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$index',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 80,
-                  color: AppColors.border,
-                ),
-            ],
+                // Rail Track
+                if (!isLast)
+                  Expanded(
+                    child: CustomPaint(
+                      painter: _RailLinePainter(),
+                      size: const Size(32, double.infinity),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           // Content
           Expanded(
             child: Container(
@@ -368,6 +386,7 @@ class _PlaceItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1072,4 +1091,50 @@ class _PlaceListChips extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RailLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final railPaint = Paint()
+      ..color = AppColors.primary.withOpacity(0.5)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    final tiePaint = Paint()
+      ..color = AppColors.primary.withOpacity(0.3)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    // Draw main rails (two parallel lines)
+    final double centerX = size.width / 2;
+    final double railOffset = 6.0;
+
+    canvas.drawLine(
+      Offset(centerX - railOffset, 0),
+      Offset(centerX - railOffset, size.height),
+      railPaint,
+    );
+
+    canvas.drawLine(
+      Offset(centerX + railOffset, 0),
+      Offset(centerX + railOffset, size.height),
+      railPaint,
+    );
+
+    // Draw cross ties (sleepers)
+    final double tieSpacing = 12.0;
+    final double tieWidth = 20.0;
+
+    for (double y = 4; y < size.height; y += tieSpacing) {
+      canvas.drawLine(
+        Offset(centerX - tieWidth / 2, y),
+        Offset(centerX + tieWidth / 2, y),
+        tiePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

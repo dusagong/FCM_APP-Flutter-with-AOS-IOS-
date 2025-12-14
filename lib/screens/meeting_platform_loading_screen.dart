@@ -64,43 +64,93 @@ class _MeetingPlatformLoadingScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 아이콘
-                Container(
-                  width: 120,
+                SizedBox(
                   height: 120,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: AppColors.primaryGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 30,
-                        spreadRadius: 5,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Steam effects
+                      ...List.generate(3, (index) {
+                        return Positioned(
+                          top: 20,
+                          right: 140.0 + (index * 20),
+                          child: Icon(
+                            Icons.cloud,
+                            size: 20 + (index * 10),
+                            color: Colors.white.withOpacity(0.5),
+                          )
+                              .animate(
+                                onPlay: (controller) => controller.repeat(),
+                              )
+                              .moveY(
+                                begin: 0,
+                                end: -30,
+                                duration: 1000.ms,
+                                delay: (300 * index).ms,
+                                curve: Curves.easeOut,
+                              )
+                              .fadeOut(
+                                begin: 1,
+                                duration: 1000.ms,
+                                delay: (300 * index).ms,
+                              ),
+                        );
+                      }),
+                      // Train Icon Shadow
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 30,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
                       ),
+                      // Train Icon with Shimmer (Clipped)
+                      ClipOval(
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: AppColors.primaryGradient,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.train_rounded,
+                            size: 56,
+                            color: Colors.white,
+                          ),
+                        )
+                            .animate(onPlay: (c) => c.repeat())
+                            .shimmer(
+                                duration: 1500.ms,
+                                color: Colors.white.withOpacity(0.5)) // Shine effect
+                      )
+                          .animate(onPlay: (c) => c.repeat())
+                          .moveY(
+                              begin: 0,
+                              end: -5,
+                              duration: 500.ms,
+                              curve: Curves.easeInOut) // Gentle bounce
+                          .then()
+                          .moveY(
+                              begin: -5,
+                              end: 0,
+                              duration: 500.ms,
+                              curve: Curves.easeInOut),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.door_sliding_rounded,
-                    size: 56,
-                    color: Colors.white,
-                  ),
-                )
-                    .animate(onPlay: (c) => c.repeat())
-                    .scale(
-                      begin: const Offset(1, 1),
-                      end: const Offset(1.05, 1.05),
-                      duration: 1000.ms,
-                    )
-                    .then()
-                    .scale(
-                      begin: const Offset(1.05, 1.05),
-                      end: const Offset(1, 1),
-                      duration: 1000.ms,
-                    ),
+                ),
                 const SizedBox(height: 48),
 
                 // 타이틀
