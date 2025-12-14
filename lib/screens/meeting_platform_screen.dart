@@ -86,6 +86,7 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
       ),
       body: TabBarView(
         controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           _CourseView(photoCard: widget.photoCard),
           _AllPlacesView(photoCard: widget.photoCard),
@@ -1387,6 +1388,8 @@ class _MapViewState extends State<_MapView> {
                 scrollGesturesEnable: true,
                 tiltGesturesEnable: true,
                 zoomGesturesEnable: true,
+                stopGesturesEnable: true,
+                consumeSymbolTapEvents: false,
                 logoClickEnable: false,
               ),
               onMapReady: (controller) {
