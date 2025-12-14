@@ -45,161 +45,181 @@ class PhotoCardWidget extends StatelessWidget {
   }
 
   Widget _buildFront(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        // Header
-        // Header (Rail Film Style)
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A1A1A),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFFD4AF37), width: 2), // Gold accent
+        Column(
+          children: [
+            // Header
+            // Header (Rail Film Style)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1A1A1A),
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFD4AF37), width: 2), // Gold accent
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.confirmation_number_outlined, 
+                        color: Colors.white54, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'RAIL FILM',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: Colors.white70,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'NO. ${photoCard.id.substring(0, 4).toUpperCase()}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: Colors.white38,
+                          fontFamily: 'Monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.confirmation_number_outlined, 
-                    color: Colors.white54, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    'RAIL FILM',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white70,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    'NO. ${photoCard.id.substring(0, 4).toUpperCase()}',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white38,
-                      fontFamily: 'Monospace',
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
 
-        // Photo Area
-        Expanded(
-          flex: 1,
-          child: Container(
-            width: double.infinity,
-            color: const Color(0xFFF5F5F5),
-            child: photoCard.imagePath != null
-                ? Image.file(
-                    File(photoCard.imagePath!),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: Icon(Icons.broken_image_rounded, color: Colors.grey),
-                        ),
-                      );
-                    },
-                  )
-                : CustomPaint(
-                    painter: _PlaceholderPainter(),
-                  ),
-          ),
-        ),
-
-        // Details Area
-        Expanded(
-          flex: 1,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                // Hashtags
-                if (photoCard.hashtags.isNotEmpty)
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    alignment: WrapAlignment.center,
-                    children: photoCard.hashtags.take(3).map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '#$tag',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: Colors.black54,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-
-                const Spacer(),
-
-                // Date & Location
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildLabelValue('DATE', photoCard.formattedDate),
-                    _buildLabelValue('LOC', photoCard.city),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-                const Divider(height: 1, color: Colors.black12),
-                const SizedBox(height: 12),
-
-                // Footer with QR
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: QrImageView(
-                        data: 'KORAIL RAIL FILM\nDATE: ${photoCard.formattedDate}\nSTATION: ${photoCard.city}\n"${photoCard.message}"',
-                        version: QrVersions.auto,
-                        size: 40,
-                        padding: EdgeInsets.zero,
-                        backgroundColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            photoCard.message,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.bodySmall.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black87,
+            // Photo Area
+            Expanded(
+              flex: 1,
+              child: Container(
+                width: double.infinity,
+                color: const Color(0xFFF5F5F5),
+                child: photoCard.imagePath != null
+                    ? Image.file(
+                        File(photoCard.imagePath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(Icons.broken_image_rounded, color: Colors.grey),
                             ),
-                          ),
-                        ],
+                          );
+                        },
+                      )
+                    : CustomPaint(
+                        painter: _PlaceholderPainter(),
                       ),
+              ),
+            ),
+
+            // Details Area
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    // Hashtags
+                    if (photoCard.hashtags.isNotEmpty)
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.center,
+                        children: photoCard.hashtags.take(3).map((tag) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black12),
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.white.withOpacity(0.8), // Slightly transparent
+                            ),
+                            child: Text(
+                              '#$tag',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.black54,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                    const Spacer(),
+                    
+                    // (Inline stamp removed from here)
+
+                    // Date & Location
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildLabelValue('DATE', photoCard.formattedDate),
+                        _buildLabelValue('LOC', photoCard.city),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+                    const Divider(height: 1, color: Colors.black12),
+                    const SizedBox(height: 12),
+
+                    // Footer with QR
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: QrImageView(
+                            data: 'KORAIL RAIL FILM\nDATE: ${photoCard.formattedDate}\nSTATION: ${photoCard.city}\n"${photoCard.message}"',
+                            version: QrVersions.auto,
+                            size: 40,
+                            padding: EdgeInsets.zero,
+                            backgroundColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                photoCard.message,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
+            ),
+          ],
+        ),
+        
+        // Floating Destination Stamp
+        Positioned(
+          bottom: 80, // Positioned above the footer area
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Transform.rotate(
+              angle: 0.1, // Slight varying tilt
+              child: _buildDestinationStamp(scale: 0.8),
             ),
           ),
         ),
@@ -317,46 +337,7 @@ class PhotoCardWidget extends StatelessWidget {
               alignment: Alignment.bottomRight,
               child: Padding(
                 padding: const EdgeInsets.only(right: 24, bottom: 24),
-                child: Transform.rotate(
-                  angle: -0.2, // Slight tilt
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary.withOpacity(0.5), width: 3),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'DESTINATION',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.primary.withOpacity(0.6),
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          photoCard.city.toUpperCase(),
-                          style: AppTypography.headlineSmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          photoCard.formattedDate,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.primary.withOpacity(0.6),
-                            fontFamily: 'Monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                child: _buildDestinationStamp(),
               ),
             ),
 
@@ -364,6 +345,52 @@ class PhotoCardWidget extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDestinationStamp({double scale = 1.0}) {
+    return Transform.scale(
+      scale: scale,
+      child: Transform.rotate(
+        angle: -0.2, // Slight tilt
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.primary.withOpacity(0.5), width: 3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'DESTINATION',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.primary.withOpacity(0.6),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                photoCard.city.toUpperCase(),
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                photoCard.formattedDate,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.primary.withOpacity(0.6),
+                  fontFamily: 'Monospace',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
