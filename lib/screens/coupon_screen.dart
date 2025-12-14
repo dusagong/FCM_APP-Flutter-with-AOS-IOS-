@@ -427,32 +427,6 @@ class _CouponPinModalState extends State<_CouponPinModal> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            // Hint
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppBorderRadius.sm),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.lightbulb_outline_rounded,
-                    color: AppColors.warning,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '프로토타입용: 1234',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.warning,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 24),
             // Buttons
             Row(
