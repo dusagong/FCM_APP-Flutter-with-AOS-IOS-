@@ -142,16 +142,16 @@ class _ReviewablePlaceCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: place != null
-                            ? () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ReviewListScreen(place: place),
-                                  ),
-                                );
-                              }
-                            : null,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => place != null
+                                  ? ReviewListScreen(place: place)
+                                  : ReviewListScreen(placeName: reviewablePlace.placeName),
+                            ),
+                          );
+                        },
                         icon: const Icon(Icons.rate_review_outlined, size: 18),
                         label: const Text('리뷰보기'),
                         style: OutlinedButton.styleFrom(
@@ -165,19 +165,22 @@ class _ReviewablePlaceCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: place != null
-                            ? () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ReviewWriteScreen(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => place != null
+                                  ? ReviewWriteScreen(
                                       place: place,
                                       fromReviewablePlaces: true,
+                                    )
+                                  : ReviewWriteScreen(
+                                      placeName: reviewablePlace.placeName,
+                                      fromReviewablePlaces: true,
                                     ),
-                                  ),
-                                );
-                              }
-                            : null,
+                            ),
+                          );
+                        },
                         icon: const Icon(Icons.edit_rounded, size: 18),
                         label: const Text('리뷰작성'),
                         style: ElevatedButton.styleFrom(

@@ -77,7 +77,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
   }
 
   bool get _canSubmit {
-    return _rating > 0 && _contentController.text.trim().isNotEmpty;
+    return _rating > 0 && _contentController.text.trim().isNotEmpty && _selectedImages.isNotEmpty;
   }
 
   Future<void> _submit() async {
@@ -271,7 +271,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
             const SizedBox(width: 8),
             Text('사진 추가', style: AppTypography.titleMedium),
             const SizedBox(width: 8),
-            Text('(선택, 최대 5장)', style: AppTypography.bodySmall),
+            Text('(필수, 최대 5장)', style: AppTypography.bodySmall.copyWith(color: AppColors.secondary)),
           ],
         ),
         const SizedBox(height: 12),

@@ -435,9 +435,9 @@ class AppProvider extends ChangeNotifier {
       // In a real app, we'd update the place object
     }
 
-    // Mark reviewable place as reviewed
+    // Mark reviewable place as reviewed (placeId 또는 placeName으로 매칭)
     final reviewableIndex = _reviewablePlaces.indexWhere(
-      (r) => r.placeId == review.placeId && !r.hasReviewed,
+      (r) => (r.placeId == review.placeId || r.placeName == review.placeName) && !r.hasReviewed,
     );
     if (reviewableIndex != -1) {
       _reviewablePlaces[reviewableIndex] = ReviewablePlace(
