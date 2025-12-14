@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
+import '../services/travel_api_service.dart';
 import 'meeting_platform_screen.dart';
 
 class MeetingPlatformLoadingScreen extends StatefulWidget {
@@ -23,8 +24,8 @@ class _MeetingPlatformLoadingScreenState
     extends State<MeetingPlatformLoadingScreen> {
   int _currentStep = 0;
   bool _hasError = false;
-  bool _apiCompleted = false;
-  RecommendationResponse? _apiResult;
+  bool _isCompleted = false;
+  String _statusMessage = '';
 
   final List<String> _loadingMessages = [
     'AI가 여행 코스를 분석하고 있어요',
@@ -39,66 +40,166 @@ class _MeetingPlatformLoadingScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startLoading();
+      _startPolling();
     });
   }
 
-  Future<void> _startLoading() async {
-    if (!mounted) return;
-    final provider = Provider.of<AppProvider>(context, listen: false);
-
-    // 기본 쿼리 생성 (해시태그 기반)
-    final query = _buildQueryFromPhotoCard(widget.photoCard);
-
-    // 1. API 호출 시작 (백그라운드)
-    _fetchRecommendations(provider, query);
-
-    // 2. 로딩 애니메이션 반복 (API 완료될 때까지)
-    await _runLoadingAnimation();
-
-    // 3. API 결과 처리
+  /// 세션 상태 polling 시작
+  Future<void> _startPolling() async {
     if (!mounted) return;
 
-    if (_apiResult == null || !_apiResult!.success) {
-      setState(() => _hasError = true);
-      await Future.delayed(const Duration(seconds: 2));
+    // 1. 로딩 애니메이션 + Polling 동시 시작
+    _runLoadingAnimation();
+    await _pollSessionStatus();
+  }
+
+  /// 세션 상태 Polling
+  Future<void> _pollSessionStatus() async {
+    const maxRetries = 180; // 최대 3분 (1초 간격)
+    int retryCount = 0;
+
+    while (retryCount < maxRetries && mounted && !_isCompleted && !_hasError) {
+      try {
+        final status = await TravelApiService.getSessionStatus(widget.photoCard.id);
+        final sessionStatus = status['status'] as String?;
+
+        print('📊 [Polling] Status: $sessionStatus (retry: $retryCount)');
+
+        if (sessionStatus == 'completed') {
+          // 추천 완료 - 결과 가져오기
+          await _loadRecommendationResult();
+          return;
+        } else if (sessionStatus == 'failed') {
+          // 추천 실패
+          setState(() {
+            _hasError = true;
+            _statusMessage = status['message'] ?? '추천 요청 실패';
+          });
+          await _showErrorAndPop();
+          return;
+        } else if (sessionStatus == 'not_found') {
+          // 세션이 없음 - 기존 방식으로 직접 요청
+          print('⚠️ [Polling] 세션이 없습니다. 기존 방식으로 직접 요청합니다.');
+          await _fetchRecommendationsDirectly();
+          return;
+        }
+
+        // pending 또는 processing 상태 - 대기 후 재시도
+        await Future.delayed(const Duration(seconds: 1));
+        retryCount++;
+      } catch (e) {
+        print('💥 [Polling] Error: $e');
+        // 에러 시 기존 방식으로 직접 요청
+        await _fetchRecommendationsDirectly();
+        return;
+      }
+    }
+
+    // 타임아웃 - 기존 방식으로 직접 요청
+    if (!_isCompleted && !_hasError && mounted) {
+      print('⏱️ [Polling] Timeout - 기존 방식으로 직접 요청합니다.');
+      await _fetchRecommendationsDirectly();
+    }
+  }
+
+  /// 추천 결과 로드 (completed 상태일 때)
+  Future<void> _loadRecommendationResult() async {
+    if (!mounted) return;
+
+    try {
+      final result = await TravelApiService.getSessionRecommendation(widget.photoCard.id);
+
+      // Provider에 결과 저장
+      final provider = Provider.of<AppProvider>(context, listen: false);
+      final response = RecommendationResponse.fromJson(result);
+
+      // Provider의 _recommendationResponse 설정을 위해 fetchRecommendations 결과를 직접 설정
+      // (현재 AppProvider에 setRecommendationResponse가 없으므로 직접 화면 전환)
+
+      setState(() => _isCompleted = true);
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(provider.recommendationError ?? '추천 정보를 불러오지 못했습니다'),
-            backgroundColor: Colors.red,
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MeetingPlatformScreen(
+              photoCard: widget.photoCard,
+              preloadedResponse: response, // 미리 로드된 결과 전달
+            ),
           ),
         );
-        Navigator.pop(context);
       }
-      return;
+    } catch (e) {
+      print('💥 [LoadResult] Error: $e');
+      setState(() {
+        _hasError = true;
+        _statusMessage = '추천 결과를 불러오지 못했습니다';
+      });
+      await _showErrorAndPop();
     }
+  }
 
-    // 성공 시 화면 전환
+  /// 기존 방식으로 직접 추천 요청 (세션이 없을 때 폴백)
+  Future<void> _fetchRecommendationsDirectly() async {
+    if (!mounted) return;
+
+    try {
+      final provider = Provider.of<AppProvider>(context, listen: false);
+      final query = _buildQueryFromPhotoCard(widget.photoCard);
+
+      final result = await provider.fetchRecommendations(
+        query: query,
+        province: widget.photoCard.province,
+        city: widget.photoCard.city,
+      );
+
+      setState(() => _isCompleted = true);
+
+      if (result == null || !result.success) {
+        setState(() {
+          _hasError = true;
+          _statusMessage = provider.recommendationError ?? '추천 요청 실패';
+        });
+        await _showErrorAndPop();
+        return;
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MeetingPlatformScreen(photoCard: widget.photoCard),
+          ),
+        );
+      }
+    } catch (e) {
+      print('💥 [DirectFetch] Error: $e');
+      setState(() {
+        _hasError = true;
+        _statusMessage = '추천 요청 중 오류가 발생했습니다';
+      });
+      await _showErrorAndPop();
+    }
+  }
+
+  /// 에러 표시 후 이전 화면으로 돌아가기
+  Future<void> _showErrorAndPop() async {
+    await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MeetingPlatformScreen(photoCard: widget.photoCard),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_statusMessage),
+          backgroundColor: Colors.red,
         ),
       );
+      Navigator.pop(context);
     }
   }
 
-  /// API 호출 (백그라운드)
-  Future<void> _fetchRecommendations(AppProvider provider, String query) async {
-    _apiResult = await provider.fetchRecommendations(
-      query: query,
-      province: widget.photoCard.province,
-      city: widget.photoCard.city,
-    );
-    _apiCompleted = true;
-  }
-
-  /// 로딩 애니메이션 (API 완료될 때까지 반복)
+  /// 로딩 애니메이션 (완료될 때까지 반복)
   Future<void> _runLoadingAnimation() async {
     int step = 0;
-    while (!_apiCompleted && mounted) {
+    while (!_isCompleted && !_hasError && mounted) {
       setState(() => _currentStep = step % _loadingMessages.length);
       await Future.delayed(const Duration(milliseconds: 2000));
       step++;
@@ -107,13 +208,10 @@ class _MeetingPlatformLoadingScreenState
 
   /// PhotoCard 정보로 추천 쿼리 생성
   String _buildQueryFromPhotoCard(PhotoCard photoCard) {
-    final hashtags = photoCard.hashtags.join(' ');
     final message = photoCard.message;
 
     if (message.isNotEmpty) {
-      return '$message $hashtags';
-    } else if (hashtags.isNotEmpty) {
-      return '${photoCard.city}에서 $hashtags 관련 데이트 코스 추천해줘';
+      return message;
     } else {
       return '${photoCard.city}에서 커플 데이트 코스 추천해줘';
     }

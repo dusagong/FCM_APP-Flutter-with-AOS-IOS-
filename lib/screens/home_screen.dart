@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: _RailBackground(
           child: Padding(
@@ -358,7 +359,7 @@ class _RailTrackPainter extends CustomPainter {
       size.width,
       size.height * 0.1,
     );
-    
+
     path.moveTo(0, size.height * 0.8);
     path.quadraticBezierTo(
       size.width * 0.5,

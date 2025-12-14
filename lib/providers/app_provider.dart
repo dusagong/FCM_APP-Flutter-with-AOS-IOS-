@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/travel_api_service.dart';
 import '../services/photo_card_storage_service.dart';
-import '../data/mock/mock_data.dart';
 
 
 class AppProvider extends ChangeNotifier {
@@ -95,10 +94,10 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _initSampleData() {
-    // MockData에서 테스트 데이터 로드
-    _photoCards = MockData.getMockPhotoCards();
-    _places = MockData.getMockPlaces();
-    _reviews = MockData.getMockReviews();
+    // 목업 데이터 제거 - 실제 데이터만 사용
+    _photoCards = [];
+    _places = [];
+    _reviews = [];
 
     notifyListeners();
   }
@@ -134,16 +133,22 @@ class AppProvider extends ChangeNotifier {
         }
       }
 
-      // 1. 서버에 PhotoCard 생성 요청
-      // Note: 서버에는 원본 경로(혹은 업로드 로직)를 보낼 수도 있지만, 
-      // 현재 로직상 로컬 경로가 중요하므로 여기서는 메타데이터 생성을 우선함.
+      // 1. area_code, sigungu_code 변환
+      final codes = TravelApiService.getAreaCodes(province, city);
+      final areaCode = codes['area_code'];
+      final sigunguCode = codes['sigungu_code'];
+
+      // 2. 서버에 PhotoCard 생성 요청
+      // area_code + sigungu_code를 함께 전달하면 백그라운드에서 추천 요청이 시작됨
       final response = await TravelApiService.createPhotoCard(
         province: province,
         city: city,
         message: message,
         hashtags: hashtags,
         aiQuote: aiQuote,
-        imagePath: savedImagePath ?? imagePath, // Use saved path if available
+        imagePath: savedImagePath ?? imagePath,
+        areaCode: areaCode,
+        sigunguCode: sigunguCode,
       );
 
       // 2. 서버 응답으로 PhotoCard 객체 생성
@@ -277,6 +282,14 @@ class AppProvider extends ChangeNotifier {
   void clearRecommendations() {
     _recommendationResponse = null;
     _recommendationError = null;
+    notifyListeners();
+  }
+
+  /// 추천 결과 직접 설정 (preloaded 데이터용)
+  void setRecommendationResponse(RecommendationResponse response) {
+    _recommendationResponse = response;
+    _recommendationError = null;
+    _isLoadingRecommendation = false;
     notifyListeners();
   }
 

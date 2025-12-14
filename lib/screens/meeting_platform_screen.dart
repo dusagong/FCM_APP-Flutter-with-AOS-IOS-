@@ -13,10 +13,12 @@ import 'my_page_screen.dart';
 
 class MeetingPlatformScreen extends StatefulWidget {
   final PhotoCard photoCard;
+  final RecommendationResponse? preloadedResponse;
 
   const MeetingPlatformScreen({
     super.key,
     required this.photoCard,
+    this.preloadedResponse,
   });
 
   @override
@@ -31,6 +33,13 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    // preloadedResponse가 있으면 Provider에 설정
+    if (widget.preloadedResponse != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AppProvider>().setRecommendationResponse(widget.preloadedResponse!);
+      });
+    }
   }
 
   @override
