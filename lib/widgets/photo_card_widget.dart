@@ -48,31 +48,43 @@ class PhotoCardWidget extends StatelessWidget {
     return Column(
       children: [
         // Header
+        // Header (Rail Film Style)
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          color: const Color(0xFF1A1A1A),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1A1A),
+            border: Border(
+              bottom: BorderSide(color: Color(0xFFD4AF37), width: 2), // Gold accent
+            ),
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                photoCard.destination.split(' ').first,
-                style: AppTypography.titleSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.confirmation_number_outlined, 
+                    color: Colors.white54, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'RAIL FILM',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Colors.white70,
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(Icons.train_rounded, color: Colors.white, size: 16),
-              ),
-              Text(
-                photoCard.city,
-                style: AppTypography.titleSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'NO. ${photoCard.id.substring(0, 4).toUpperCase()}',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Colors.white38,
+                      fontFamily: 'Monospace',
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -207,19 +219,45 @@ class PhotoCardWidget extends StatelessWidget {
         
         Column(
           children: [
-            // Header
+            // Header (Rail Film Style)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              color: const Color(0xFF1A1A1A),
-              width: double.infinity,
-              child: Text(
-                'TRAVEL RECORD',
-                textAlign: TextAlign.center,
-                style: AppTypography.titleSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1A1A1A),
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFD4AF37), width: 2), // Gold accent
                 ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.confirmation_number_outlined, 
+                        color: Colors.white54, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'RAIL FILM',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: Colors.white70,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'NO. ${photoCard.id.substring(0, 4).toUpperCase()}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: Colors.white38,
+                          fontFamily: 'Monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
