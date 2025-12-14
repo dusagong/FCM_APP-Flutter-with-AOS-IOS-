@@ -87,6 +87,7 @@ class MyPageScreen extends StatelessWidget {
         _MenuItem(
           icon: Icons.credit_card_rounded,
           title: '나의 포토카드',
+          color: AppColors.primary,
           onTap: () {
             Navigator.push(
               context,
@@ -98,6 +99,7 @@ class MyPageScreen extends StatelessWidget {
         _MenuItem(
           icon: Icons.local_offer_rounded,
           title: '쿠폰함',
+          color: AppColors.secondary,  // 녹색 - 혜택
           onTap: () {
             Navigator.push(
               context,
@@ -109,6 +111,7 @@ class MyPageScreen extends StatelessWidget {
         _MenuItem(
           icon: Icons.rate_review_rounded,
           title: '내가 쓴 리뷰',
+          color: AppColors.accent,  // 노란색 - 리뷰
           onTap: () {
             Navigator.push(
               context,
@@ -120,6 +123,7 @@ class MyPageScreen extends StatelessWidget {
         _MenuItem(
           icon: Icons.edit_note_rounded,
           title: '리뷰 작성 가능한 곳',
+          color: AppColors.accentTeal,  // 청록색
           onTap: () {
             Navigator.push(
               context,
@@ -170,11 +174,13 @@ class _StatItem extends StatelessWidget {
 class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
+  final Color color;
   final VoidCallback onTap;
 
   const _MenuItem({
     required this.icon,
     required this.title,
+    required this.color,
     required this.onTap,
   });
 
@@ -198,10 +204,10 @@ class _MenuItem extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppBorderRadius.md),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 20),
+                child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(

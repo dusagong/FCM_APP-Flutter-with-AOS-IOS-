@@ -169,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.credit_card_rounded,
                   '${provider.photoCardCount}',
                   '포토카드',
+                  color: AppColors.primary,
                 ),
                 Container(
                   height: 24,
@@ -180,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.local_offer_rounded,
                   '${provider.couponCount}',
                   '쿠폰',
+                  color: AppColors.secondary,  // 녹색 - 혜택
                 ),
                 Container(
                   height: 24,
@@ -191,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.star_rounded,
                   '${provider.reviewCount}',
                   '리뷰',
+                  color: AppColors.accent,  // 노란색 - 별점
                 ),
               ],
             ).animate().fadeIn(delay: 900.ms, duration: 500.ms);
@@ -200,18 +203,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatItem(IconData icon, String count, String label) {
+  Widget _buildStatItem(IconData icon, String count, String label, {Color? color}) {
+    final itemColor = color ?? AppColors.primary;
     return Column(
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppColors.primary),
+            Icon(icon, size: 16, color: itemColor),
             const SizedBox(width: 4),
             Text(
               count,
               style: AppTypography.titleMedium.copyWith(
-                color: AppColors.primary,
+                color: itemColor,
                 fontWeight: FontWeight.w700,
               ),
             ),

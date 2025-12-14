@@ -404,17 +404,17 @@ class _PlaceActionButtons extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Success icon
+              // Success icon - 녹색 테마
               Container(
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
+                  color: AppColors.secondary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.card_giftcard_rounded,
-                  color: AppColors.success,
+                  color: AppColors.secondary,
                   size: 40,
                 ),
               ),
@@ -422,7 +422,9 @@ class _PlaceActionButtons extends StatelessWidget {
               // Title
               Text(
                 '쿠폰을 받았습니다!',
-                style: AppTypography.headlineSmall,
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.secondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -430,7 +432,7 @@ class _PlaceActionButtons extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.secondary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppBorderRadius.md),
                 ),
                 child: Row(
@@ -438,7 +440,7 @@ class _PlaceActionButtons extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.store_rounded,
-                      color: AppColors.primary,
+                      color: AppColors.secondary,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -446,7 +448,7 @@ class _PlaceActionButtons extends StatelessWidget {
                       child: Text(
                         place.name,
                         style: AppTypography.titleMedium.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.secondaryDark,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -472,11 +474,12 @@ class _PlaceActionButtons extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppColors.secondary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppBorderRadius.md),
                         ),
                       ),
-                      child: const Text('닫기'),
+                      child: Text('닫기', style: TextStyle(color: AppColors.secondary)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -492,7 +495,7 @@ class _PlaceActionButtons extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppColors.secondary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppBorderRadius.md),

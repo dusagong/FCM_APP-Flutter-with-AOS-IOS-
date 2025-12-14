@@ -84,7 +84,7 @@ class _CouponCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: coupon.isUsed
                     ? AppColors.surfaceVariant
-                    : AppColors.primary.withValues(alpha: 0.1),
+                    : AppColors.secondary.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(AppBorderRadius.lg),
                 ),
@@ -97,7 +97,7 @@ class _CouponCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: coupon.isUsed
                           ? AppColors.textTertiary
-                          : AppColors.primary,
+                          : AppColors.secondary,
                       borderRadius: BorderRadius.circular(AppBorderRadius.md),
                     ),
                     child: const Icon(
@@ -209,7 +209,7 @@ class _CouponCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () => _showUseCouponModal(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: AppColors.secondary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppBorderRadius.md),
