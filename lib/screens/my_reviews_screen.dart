@@ -133,8 +133,6 @@ class _ReviewGridItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      RatingStars(rating: review.rating.toDouble(), size: 12),
-                      const SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           review.formattedDate,
@@ -273,19 +271,7 @@ class _ReviewDetailModal extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Rating
-                  Row(
-                    children: [
-                      RatingStars(rating: review.rating.toDouble(), size: 24),
-                      const SizedBox(width: 12),
-                      Text(
-                        '${review.rating}.0',
-                        style: AppTypography.headlineSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+
                   const SizedBox(height: 8),
                   Text(
                     review.formattedDate,

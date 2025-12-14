@@ -227,45 +227,7 @@ class HashTagChip extends StatelessWidget {
   }
 }
 
-// Rating Stars
-class RatingStars extends StatelessWidget {
-  final double rating;
-  final double size;
-  final bool interactive;
-  final ValueChanged<int>? onRatingChanged;
 
-  const RatingStars({
-    super.key,
-    required this.rating,
-    this.size = 16,
-    this.interactive = false,
-    this.onRatingChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        final filled = index < rating.floor();
-        final half = index == rating.floor() && rating % 1 >= 0.5;
-
-        return GestureDetector(
-          onTap: interactive ? () => onRatingChanged?.call(index + 1) : null,
-          child: Icon(
-            filled
-                ? Icons.star_rounded
-                : half
-                    ? Icons.star_half_rounded
-                    : Icons.star_outline_rounded,
-            color: AppColors.accent,
-            size: size,
-          ),
-        );
-      }),
-    );
-  }
-}
 
 // Category Badge
 class CategoryBadge extends StatelessWidget {

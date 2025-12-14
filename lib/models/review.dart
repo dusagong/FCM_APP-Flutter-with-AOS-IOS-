@@ -2,7 +2,7 @@ class Review {
   final String id;
   final String placeId;
   final String placeName;
-  final int rating;
+
   final String content;
   final List<String> imageUrls;
   final DateTime createdAt;
@@ -12,7 +12,7 @@ class Review {
     required this.id,
     required this.placeId,
     required this.placeName,
-    required this.rating,
+
     required this.content,
     required this.imageUrls,
     required this.createdAt,
@@ -27,7 +27,7 @@ class Review {
     String? id,
     String? placeId,
     String? placeName,
-    int? rating,
+
     String? content,
     List<String>? imageUrls,
     DateTime? createdAt,
@@ -37,7 +37,7 @@ class Review {
       id: id ?? this.id,
       placeId: placeId ?? this.placeId,
       placeName: placeName ?? this.placeName,
-      rating: rating ?? this.rating,
+
       content: content ?? this.content,
       imageUrls: imageUrls ?? this.imageUrls,
       createdAt: createdAt ?? this.createdAt,
@@ -50,7 +50,7 @@ class Review {
       'id': id,
       'placeId': placeId,
       'placeName': placeName,
-      'rating': rating,
+
       'content': content,
       'imageUrls': imageUrls,
       'createdAt': createdAt.toIso8601String(),
@@ -63,7 +63,7 @@ class Review {
       id: json['id'],
       placeId: json['placeId'],
       placeName: json['placeName'],
-      rating: json['rating'],
+
       content: json['content'],
       imageUrls: List<String>.from(json['imageUrls']),
       createdAt: DateTime.parse(json['createdAt']),

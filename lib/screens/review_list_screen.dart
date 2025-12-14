@@ -30,12 +30,12 @@ class ReviewListScreen extends StatelessWidget {
       body: Consumer<AppProvider>(
         builder: (context, provider, _) {
           final reviews = provider.getReviewsByPlace(_placeId);
-          final avgRating = provider.getAverageRating(_placeId);
+
 
           return Column(
             children: [
               // Header
-              _buildHeader(avgRating, reviews.length),
+              _buildHeader(reviews.length),
               // Reviews grid
               Expanded(
                 child: reviews.isEmpty
@@ -53,7 +53,7 @@ class ReviewListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(double avgRating, int count) {
+  Widget _buildHeader(int count) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -89,17 +89,7 @@ class ReviewListScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    if (avgRating > 0) ...[
-                      RatingStars(rating: avgRating, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        avgRating.toStringAsFixed(1),
-                        style: AppTypography.labelMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
+
                     Text(
                       '$count개의 리뷰',
                       style: AppTypography.bodySmall,
@@ -248,28 +238,7 @@ class _ReviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Stamp-like rating
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      review.rating.toString(),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
+
               Text(
                 review.formattedDate,
                 style: AppTypography.labelSmall.copyWith(
@@ -358,19 +327,14 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                RatingStars(rating: widget.review.rating.toDouble(), size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  widget.review.rating.toString(),
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Spacer(),
-                Text(
+
+              Expanded(
+                child: Text(
                   widget.review.formattedDate,
                   style: AppTypography.bodySmall,
+                  textAlign: TextAlign.right,
                 ),
+              ),
               ],
             ),
           ),

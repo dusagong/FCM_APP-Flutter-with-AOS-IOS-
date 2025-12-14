@@ -418,13 +418,7 @@ class AppProvider extends ChangeNotifier {
     return _reviews.where((r) => r.placeId == placeId).toList();
   }
 
-  double getAverageRating(String placeId) {
-    final placeReviews = getReviewsByPlace(placeId);
-    if (placeReviews.isEmpty) return 0;
 
-    final sum = placeReviews.fold<int>(0, (sum, r) => sum + r.rating);
-    return sum / placeReviews.length;
-  }
 
   void addReview(Review review) {
     _reviews.insert(0, review);

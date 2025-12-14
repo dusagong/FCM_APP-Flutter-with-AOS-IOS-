@@ -42,7 +42,7 @@ class Place {
   final String name;
   final PlaceCategory category;
   final String description;
-  final double rating;
+
   final int reviewCount;
   final String imageUrl;
   final String province;
@@ -56,7 +56,7 @@ class Place {
     required this.name,
     required this.category,
     required this.description,
-    required this.rating,
+
     required this.reviewCount,
     required this.imageUrl,
     required this.province,
@@ -74,7 +74,7 @@ class Place {
       'name': name,
       'category': category.index,
       'description': description,
-      'rating': rating,
+
       'reviewCount': reviewCount,
       'imageUrl': imageUrl,
       'province': province,
@@ -91,7 +91,7 @@ class Place {
       name: json['name'],
       category: PlaceCategory.values[json['category']],
       description: json['description'],
-      rating: json['rating'].toDouble(),
+
       reviewCount: json['reviewCount'],
       imageUrl: json['imageUrl'],
       province: json['province'],

@@ -908,19 +908,13 @@ class _PlaceItem extends StatelessWidget {
                     style: AppTypography.titleMedium,
                   ),
                   const SizedBox(height: 4),
-                  // Rating
+                  // Review Count
                   Row(
                     children: [
-                      RatingStars(rating: place.rating, size: 14),
+                      const Icon(Icons.rate_review_rounded, size: 14, color: AppColors.textTertiary),
                       const SizedBox(width: 4),
                       Text(
-                        '${place.rating}',
-                        style: AppTypography.labelSmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        ' (${place.reviewCount}개 리뷰)',
+                        '리뷰 ${place.reviewCount}개',
                         style: AppTypography.labelSmall,
                       ),
                     ],

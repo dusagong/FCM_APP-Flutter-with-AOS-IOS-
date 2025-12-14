@@ -262,10 +262,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                 ),
                 _buildStatItem(
-                  Icons.star_rounded,
+                  Icons.rate_review_rounded,
                   '${provider.reviewCount}',
                   '리뷰',
-                  color: AppColors.accent,  // 노란색 - 별점
+                  color: AppColors.accent,  // 포인트 컬러
                 ),
               ],
             ).animate().fadeIn(delay: 900.ms, duration: 500.ms);

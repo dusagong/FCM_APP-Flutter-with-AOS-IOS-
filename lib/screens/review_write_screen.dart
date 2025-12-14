@@ -35,7 +35,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
   final TextEditingController _contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
-  int _rating = 0;
+
   bool _isSubmitting = false;
 
   @override
@@ -77,7 +77,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
   }
 
   bool get _canSubmit {
-    return _rating > 0 && _contentController.text.trim().isNotEmpty && _selectedImages.isNotEmpty;
+    return _contentController.text.trim().isNotEmpty && _selectedImages.isNotEmpty;
   }
 
   Future<void> _submit() async {
@@ -94,7 +94,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
       id: const Uuid().v4(),
       placeId: widget.placeId,
       placeName: widget.displayName,
-      rating: _rating,
+
       content: _contentController.text.trim(),
       imageUrls: _selectedImages.map((x) => x.path).toList(),
       createdAt: DateTime.now(),
@@ -125,9 +125,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
             _buildPlaceInfo(),
             const SizedBox(height: 24),
 
-            // Rating
-            _buildRatingSection(),
-            const SizedBox(height: 24),
+
 
             // Photos
             _buildPhotoSection(),
@@ -196,70 +194,7 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
     ).animate().fadeIn(duration: 300.ms);
   }
 
-  Widget _buildRatingSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.star_rounded, color: AppColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('별점을 선택해주세요', style: AppTypography.titleMedium),
-            const SizedBox(width: 8),
-            Text('(필수)', style: AppTypography.bodySmall.copyWith(color: AppColors.secondary)),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (index) {
-            final starIndex = index + 1;
-            return GestureDetector(
-              onTap: () => setState(() => _rating = starIndex),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  starIndex <= _rating
-                      ? Icons.star_rounded
-                      : Icons.star_outline_rounded,
-                  color: AppColors.accent,
-                  size: 48,
-                ),
-              ),
-            );
-          }),
-        ),
-        if (_rating > 0) ...[
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              _getRatingText(_rating),
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.accent,
-              ),
-            ),
-          ),
-        ],
-      ],
-    ).animate().fadeIn(delay: 100.ms, duration: 300.ms);
-  }
 
-  String _getRatingText(int rating) {
-    switch (rating) {
-      case 1:
-        return '별로예요';
-      case 2:
-        return '그저 그래요';
-      case 3:
-        return '괜찮아요';
-      case 4:
-        return '좋아요';
-      case 5:
-        return '최고예요!';
-      default:
-        return '';
-    }
-  }
 
   Widget _buildPhotoSection() {
     return Column(
