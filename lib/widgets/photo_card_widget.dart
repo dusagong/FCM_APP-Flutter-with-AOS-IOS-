@@ -173,7 +173,7 @@ class PhotoCardWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: QrImageView(
-                        data: 'ticket-${photoCard.id}',
+                        data: 'KORAIL RAIL FILM\nDATE: ${photoCard.formattedDate}\nSTATION: ${photoCard.city}\n"${photoCard.message}"',
                         version: QrVersions.auto,
                         size: 40,
                         padding: EdgeInsets.zero,
