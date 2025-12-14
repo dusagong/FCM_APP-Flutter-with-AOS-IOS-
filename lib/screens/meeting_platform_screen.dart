@@ -53,7 +53,7 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
         title: Column(
           children: [
             Text(
-              '${widget.photoCard.city} 여행 추천 코스',
+              '${widget.photoCard.city} 데이트 추천 코스',
               style: AppTypography.titleMedium,
             ),
           ],
