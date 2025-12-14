@@ -471,17 +471,17 @@ class _PlaceActionButtons extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Success icon - 녹색 테마
+              // Success icon - Blue Theme
               Container(
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.15),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.card_giftcard_rounded,
-                  color: AppColors.secondary,
+                  color: AppColors.primary,
                   size: 40,
                 ),
               ),
@@ -490,7 +490,8 @@ class _PlaceActionButtons extends StatelessWidget {
               Text(
                 '쿠폰을 받았습니다!',
                 style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.secondary,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -499,7 +500,7 @@ class _PlaceActionButtons extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppBorderRadius.md),
                 ),
                 child: Row(
@@ -507,7 +508,7 @@ class _PlaceActionButtons extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.store_rounded,
-                      color: AppColors.secondary,
+                      color: AppColors.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -515,7 +516,8 @@ class _PlaceActionButtons extends StatelessWidget {
                       child: Text(
                         place.name,
                         style: AppTypography.titleMedium.copyWith(
-                          color: AppColors.secondaryDark,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -541,12 +543,12 @@ class _PlaceActionButtons extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: AppColors.secondary),
+                        side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppBorderRadius.md),
                         ),
                       ),
-                      child: Text('닫기', style: TextStyle(color: AppColors.secondary)),
+                      child: const Text('닫기', style: TextStyle(color: AppColors.primary)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -562,11 +564,12 @@ class _PlaceActionButtons extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
+                        backgroundColor: AppColors.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppBorderRadius.md),
                         ),
+                        elevation: 0,
                       ),
                       child: const Text('쿠폰함 보기'),
                     ),

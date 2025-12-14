@@ -223,36 +223,77 @@ class _ReviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        boxShadow: AppShadows.small,
+        borderRadius: BorderRadius.circular(2), // Sharp corners like paper? Or rounded paper. Let's go with slightly rounded.
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              RatingStars(rating: review.rating.toDouble(), size: 16),
-              const SizedBox(width: 8),
-              Text(
-                review.rating.toString(),
-                style: AppTypography.labelMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+              // Stamp-like rating
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.primary),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      review.rating.toString(),
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Spacer(),
               Text(
                 review.formattedDate,
-                style: AppTypography.labelSmall,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                  fontFamily: 'Monospace', // Typewriter feel? Or just simple
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             review.content,
-            style: AppTypography.bodyMedium,
+            style: AppTypography.bodyMedium.copyWith(
+              height: 1.6,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // User info or "Traveler" label
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'by Traveler',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
         ],
       ),
