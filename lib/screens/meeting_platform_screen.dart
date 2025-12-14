@@ -11,6 +11,19 @@ import 'review_list_screen.dart';
 import 'review_write_screen.dart';
 import 'my_page_screen.dart';
 
+// 지도 탭 이동 및 포커싱 알림
+class MoveToMapNotification extends Notification {
+  final double latitude;
+  final double longitude;
+  final String? label;
+
+  MoveToMapNotification({
+    required this.latitude,
+    required this.longitude,
+    this.label,
+  });
+}
+
 class MeetingPlatformScreen extends StatefulWidget {
   final PhotoCard photoCard;
   final RecommendationResponse? preloadedResponse;
@@ -28,6 +41,7 @@ class MeetingPlatformScreen extends StatefulWidget {
 class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  NLatLng? _focusedTarget; // 지도 포커스 좌표
 
   @override
   void initState() {
@@ -84,14 +98,26 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
           child: _buildTabBar(),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          _CourseView(photoCard: widget.photoCard),
-          _AllPlacesView(photoCard: widget.photoCard),
-          _MapView(photoCard: widget.photoCard),
-        ],
+      body: NotificationListener<MoveToMapNotification>(
+        onNotification: (notification) {
+          setState(() {
+            _focusedTarget = NLatLng(notification.latitude, notification.longitude);
+          });
+          _tabController.animateTo(2); // 지도 탭으로 이동
+          return true;
+        },
+        child: TabBarView(
+          controller: _tabController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _CourseView(photoCard: widget.photoCard),
+            _AllPlacesView(photoCard: widget.photoCard),
+            _MapView(
+              photoCard: widget.photoCard,
+              focusedTarget: _focusedTarget,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -659,6 +685,21 @@ class _CourseStopActionButtons extends StatelessWidget {
                   );
                 },
               ),
+            // 지도 보기 버튼 (좌표 정보가 있을 때만)
+            if (stop.hasLocation) ...[
+              const SizedBox(width: 8),
+              _ActionButton(
+                label: '지도',
+                icon: Icons.map_outlined,
+                onTap: () {
+                  MoveToMapNotification(
+                    latitude: stop.latitude!,
+                    longitude: stop.longitude!,
+                    label: stop.name,
+                  ).dispatch(context);
+                },
+              ),
+            ],
           ],
         );
       },
@@ -1556,6 +1597,21 @@ class _SpotActionButtons extends StatelessWidget {
                   );
                 },
               ),
+            // 지도 보기 버튼 (좌표 정보가 있을 때만)
+            if (spot.hasLocation) ...[
+              const SizedBox(width: 8),
+              _ActionButton(
+                label: '지도',
+                icon: Icons.map_outlined,
+                onTap: () {
+                  MoveToMapNotification(
+                    latitude: spot.latitude!,
+                    longitude: spot.longitude!,
+                    label: spot.name,
+                  ).dispatch(context);
+                },
+              ),
+            ],
           ],
         );
       },
@@ -1566,8 +1622,12 @@ class _SpotActionButtons extends StatelessWidget {
 // Map View with NaverMap - API 추천 장소 사용
 class _MapView extends StatefulWidget {
   final PhotoCard photoCard;
+  final NLatLng? focusedTarget;
 
-  const _MapView({required this.photoCard});
+  const _MapView({
+    required this.photoCard,
+    this.focusedTarget,
+  });
 
   @override
   State<_MapView> createState() => _MapViewState();
@@ -1582,7 +1642,31 @@ class _MapViewState extends State<_MapView> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(_MapView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusedTarget != null &&
+        widget.focusedTarget != oldWidget.focusedTarget &&
+        _mapController != null) {
+      _moveCamera(widget.focusedTarget!);
+    }
+  }
+
+  void _moveCamera(NLatLng target) {
+    final cameraUpdate = NCameraUpdate.withParams(
+      target: target,
+      zoom: 16,
+    );
+    cameraUpdate.setAnimation(animation: NCameraAnimation.fly, duration: const Duration(milliseconds: 1500));
+    _mapController!.updateCamera(cameraUpdate);
+  }
+
   NLatLng _getInitialPosition(List<SpotWithLocation> spots) {
+    // 포커스 타겟이 있으면 거기로
+    if (widget.focusedTarget != null) {
+      return widget.focusedTarget!;
+    }
+    
     // 장소 목록에서 좌표가 있는 첫 번째 장소의 위치를 기준으로 함
     for (final spot in spots) {
       if (spot.hasLocation) {
