@@ -77,6 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ).animate().fadeIn(delay: 200.ms, duration: 500.ms).slideY(begin: 0.2, end: 0),
         const SizedBox(height: 8),
+        Text(
+          '사랑하는 사람과 함께하는 특별한 여행',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
+        const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(

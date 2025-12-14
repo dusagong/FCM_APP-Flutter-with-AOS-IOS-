@@ -135,9 +135,12 @@ class _ReviewGridItem extends StatelessWidget {
                     children: [
                       RatingStars(rating: review.rating.toDouble(), size: 12),
                       const SizedBox(width: 4),
-                      Text(
-                        review.formattedDate,
-                        style: AppTypography.labelSmall,
+                      Flexible(
+                        child: Text(
+                          review.formattedDate,
+                          style: AppTypography.labelSmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
