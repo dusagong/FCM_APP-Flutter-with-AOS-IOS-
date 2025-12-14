@@ -639,22 +639,7 @@ class _CourseStopActionButtons extends StatelessWidget {
 
         return Row(
           children: [
-            _ActionButton(
-              label: '리뷰보기',
-              icon: Icons.rate_review_outlined,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ReviewListScreen(
-                      placeName: stop.name,
-                      placeCategory: stop.category,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 8),
+            // 1. 쿠폰받기 (관광지 제외) 또는 리뷰작성 (관광지)
             if (hasCouponCategory)
               _ActionButton(
                 label: hasCoupon ? '쿠폰받음' : '쿠폰받기',
@@ -685,7 +670,24 @@ class _CourseStopActionButtons extends StatelessWidget {
                   );
                 },
               ),
-            // 지도 보기 버튼 (좌표 정보가 있을 때만)
+            const SizedBox(width: 8),
+            // 2. 리뷰보기
+            _ActionButton(
+              label: '리뷰보기',
+              icon: Icons.rate_review_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReviewListScreen(
+                      placeName: stop.name,
+                      placeCategory: stop.category,
+                    ),
+                  ),
+                );
+              },
+            ),
+            // 3. 지도 보기 버튼 (좌표 정보가 있을 때만)
             if (stop.hasLocation) ...[
               const SizedBox(width: 8),
               _ActionButton(
@@ -1376,30 +1378,6 @@ class _SpotCard extends StatelessWidget {
                     ],
                   ),
                 ],
-                // Location indicator (좌표가 있는 경우)
-                if (spot.hasLocation) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppBorderRadius.sm),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.map_outlined, size: 12, color: AppColors.success),
-                        const SizedBox(width: 4),
-                        Text(
-                          '지도에서 보기 가능',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.success,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
                 // 리뷰보기/쿠폰받기 버튼
                 const SizedBox(height: 12),
                 _SpotActionButtons(spot: spot),
@@ -1545,22 +1523,7 @@ class _SpotActionButtons extends StatelessWidget {
 
         return Row(
           children: [
-            _ActionButton(
-              label: '리뷰보기',
-              icon: Icons.rate_review_outlined,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ReviewListScreen(
-                      placeName: spot.name,
-                      placeCategory: spot.category,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 8),
+            // 1. 쿠폰받기 (관광지 제외) 또는 리뷰작성 (관광지)
             if (hasCouponCategory)
               _ActionButton(
                 label: hasCoupon ? '쿠폰받음' : '쿠폰받기',
@@ -1591,7 +1554,24 @@ class _SpotActionButtons extends StatelessWidget {
                   );
                 },
               ),
-            // 지도 보기 버튼 (좌표 정보가 있을 때만)
+            const SizedBox(width: 8),
+            // 2. 리뷰보기
+            _ActionButton(
+              label: '리뷰보기',
+              icon: Icons.rate_review_outlined,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReviewListScreen(
+                      placeName: spot.name,
+                      placeCategory: spot.category,
+                    ),
+                  ),
+                );
+              },
+            ),
+            // 3. 지도 보기 버튼 (좌표 정보가 있을 때만)
             if (spot.hasLocation) ...[
               const SizedBox(width: 8),
               _ActionButton(
