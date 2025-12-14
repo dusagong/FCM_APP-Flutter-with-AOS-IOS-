@@ -1279,6 +1279,165 @@ class _MapViewState extends State<_MapView> {
     await _mapController!.addOverlayAll(markers.toSet());
   }
 
+  /// 코스 경로선 추가
+  void _addCourseRoute(RecommendedCourse? course) async {
+    if (_mapController == null || course == null) return;
+
+    // 좌표가 있는 정차지만 필터링 (순서대로)
+    final stopsWithLocation = course.stops
+        .where((stop) => stop.hasLocation)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+
+    if (stopsWithLocation.length < 2) return;
+
+    // 경로 좌표 생성
+    final coords = stopsWithLocation
+        .map((stop) => NLatLng(stop.latitude!, stop.longitude!))
+        .toList();
+
+    // 점선 경로 (#9bfa6c보다 진한 초록색)
+    const routeColor = Color(0xFF5BD936);
+    final polyline = NPolylineOverlay(
+      id: 'course_route',
+      coords: coords,
+      color: routeColor,
+      width: 4,
+      lineCap: NLineCap.round,
+      lineJoin: NLineJoin.round,
+      pattern: [10, 6], // 점선 패턴
+    );
+    await _mapController!.addOverlay(polyline);
+
+    // 코스 마커 추가
+    final courseMarkers = <NMarker>[];
+    for (int i = 0; i < stopsWithLocation.length; i++) {
+      final stop = stopsWithLocation[i];
+
+      final marker = NMarker(
+        id: 'course_${stop.order}',
+        position: NLatLng(stop.latitude!, stop.longitude!),
+        caption: NOverlayCaption(
+          text: '${stop.order}. ${stop.name}',
+          textSize: 12,
+          color: AppColors.textPrimary,
+          haloColor: Colors.white,
+        ),
+      );
+
+      marker.setOnTapListener((overlay) {
+        _showCourseStopBottomSheet(context, stop);
+      });
+
+      courseMarkers.add(marker);
+    }
+
+    await _mapController!.addOverlayAll(courseMarkers.toSet());
+  }
+
+  void _showCourseStopBottomSheet(BuildContext context, CourseStop stop) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppBorderRadius.xl),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 순서 배지
+            Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${stop.order}',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CategoryBadge(
+                  label: stop.category ?? '장소',
+                  color: _getCategoryColor(stop.category),
+                  emoji: _getCategoryEmoji(stop.category),
+                ),
+                const Spacer(),
+                if (stop.time != null)
+                  Text(
+                    stop.time!,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(stop.name, style: AppTypography.headlineSmall),
+            if (stop.address != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      stop.address!,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (stop.reason != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.favorite_rounded, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        stop.reason!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showSpotBottomSheet(BuildContext context, SpotWithLocation spot) {
     showModalBottomSheet(
       context: context,
@@ -1395,6 +1554,8 @@ class _MapViewState extends State<_MapView> {
               onMapReady: (controller) {
                 _mapController = controller;
                 _addMarkers(spotsWithCoords);
+                // 코스 경로선 추가
+                _addCourseRoute(provider.recommendedCourse);
               },
             ),
             // 장소 개수 표시
@@ -1423,6 +1584,32 @@ class _MapViewState extends State<_MapView> {
                 ),
               ),
             ),
+            // 확대/축소 버튼
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Column(
+                children: [
+                  _ZoomButton(
+                    icon: Icons.add,
+                    onTap: () {
+                      _mapController?.updateCamera(
+                        NCameraUpdate.zoomIn(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _ZoomButton(
+                    icon: Icons.remove,
+                    onTap: () {
+                      _mapController?.updateCamera(
+                        NCameraUpdate.zoomOut(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
             // 장소 목록 버튼
             Positioned(
               bottom: 24,
@@ -1430,6 +1617,7 @@ class _MapViewState extends State<_MapView> {
               right: 16,
               child: _SpotListChips(
                 spots: spotsWithCoords,
+                course: provider.recommendedCourse,
                 onSpotTap: (spot) {
                   if (_mapController != null && spot.hasLocation) {
                     _mapController!.updateCamera(
@@ -1439,6 +1627,17 @@ class _MapViewState extends State<_MapView> {
                       ),
                     );
                     _showSpotBottomSheet(context, spot);
+                  }
+                },
+                onCourseStopTap: (stop) {
+                  if (_mapController != null && stop.hasLocation) {
+                    _mapController!.updateCamera(
+                      NCameraUpdate.withParams(
+                        target: NLatLng(stop.latitude!, stop.longitude!),
+                        zoom: 15,
+                      ),
+                    );
+                    _showCourseStopBottomSheet(context, stop);
                   }
                 },
               ),
@@ -1453,11 +1652,15 @@ class _MapViewState extends State<_MapView> {
 /// API 응답 SpotWithLocation용 하단 칩 목록
 class _SpotListChips extends StatelessWidget {
   final List<SpotWithLocation> spots;
+  final RecommendedCourse? course;
   final Function(SpotWithLocation) onSpotTap;
+  final Function(CourseStop)? onCourseStopTap;
 
   const _SpotListChips({
     required this.spots,
+    this.course,
     required this.onSpotTap,
+    this.onCourseStopTap,
   });
 
   Color _getCategoryColor(String? category) {
@@ -1496,17 +1699,78 @@ class _SpotListChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 코스 정차지 (좌표 있는 것만, 순서대로)
+    final courseStops = course?.stops
+            .where((stop) => stop.hasLocation)
+            .toList()
+          ?..sort((a, b) => a.order.compareTo(b.order));
+    final courseStopCount = courseStops?.length ?? 0;
+    final totalCount = courseStopCount + spots.length;
+
     return SizedBox(
       height: 44,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: spots.length,
+        itemCount: totalCount,
         itemBuilder: (context, index) {
-          final spot = spots[index];
+          // 먼저 코스 정차지 표시
+          if (index < courseStopCount) {
+            final stop = courseStops![index];
+            return GestureDetector(
+              onTap: () => onCourseStopTap?.call(stop),
+              child: Container(
+                margin: EdgeInsets.only(right: index < totalCount - 1 ? 8 : 0),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5BD936), // 코스 경로 색상과 동일
+                  borderRadius: BorderRadius.circular(AppBorderRadius.full),
+                  boxShadow: AppShadows.small,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${stop.order}',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: const Color(0xFF5BD936),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      stop.name,
+                      style: AppTypography.labelSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(
+                  delay: Duration(milliseconds: 50 * index),
+                  duration: 200.ms,
+                ).slideX(begin: 0.2, end: 0);
+          }
+
+          // 그 다음 일반 장소 표시
+          final spotIndex = index - courseStopCount;
+          final spot = spots[spotIndex];
           return GestureDetector(
             onTap: () => onSpotTap(spot),
             child: Container(
-              margin: EdgeInsets.only(right: index < spots.length - 1 ? 8 : 0),
+              margin: EdgeInsets.only(right: index < totalCount - 1 ? 8 : 0),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -1588,4 +1852,36 @@ class _RailLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// 지도 확대/축소 버튼
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ZoomButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: AppShadows.small,
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.textPrimary,
+          size: 22,
+        ),
+      ),
+    );
+  }
 }
