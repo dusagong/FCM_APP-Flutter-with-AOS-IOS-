@@ -160,7 +160,7 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
         // 검증 실패: 사용자에게 알림
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('유효하지 않은 포토카드입니다. 다시 생성해주세요.'),
+            content: Text('유효하지 않은 레일필름입니다. 다시 생성해주세요.'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ),
@@ -175,7 +175,7 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
       // 에러 처리
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('포토카드 검증 중 오류가 발생했습니다: $e'),
+          content: Text('레일필름 검증 중 오류가 발생했습니다: $e'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
@@ -188,7 +188,7 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        title: '코레일 러브포토카드',
+        title: '코레일 러브레일필름',
         showBackButton: false,
         actions: [
           IconButton(

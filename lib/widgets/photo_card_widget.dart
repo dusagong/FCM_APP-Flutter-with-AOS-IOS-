@@ -56,7 +56,7 @@ class PhotoCardWidget extends StatelessWidget {
             children: [
               Text(
                 photoCard.destination.split(' ').first,
-                style: AppTypography.titleMedium.copyWith(
+                style: AppTypography.titleSmall.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
@@ -68,7 +68,7 @@ class PhotoCardWidget extends StatelessWidget {
               ),
               Text(
                 photoCard.city,
-                style: AppTypography.titleMedium.copyWith(
+                style: AppTypography.titleSmall.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
@@ -207,7 +207,7 @@ class PhotoCardWidget extends StatelessWidget {
               child: Text(
                 'TRAVEL RECORD',
                 textAlign: TextAlign.center,
-                style: AppTypography.titleMedium.copyWith(
+                style: AppTypography.titleSmall.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,

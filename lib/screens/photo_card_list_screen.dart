@@ -24,7 +24,7 @@ class PhotoCardListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: '나의 포토카드'),
+      appBar: const CustomAppBar(title: '나의 레일필름'),
       body: Consumer<AppProvider>(
         builder: (context, provider, _) {
           final photoCards = provider.photoCards;
@@ -32,9 +32,9 @@ class PhotoCardListScreen extends StatelessWidget {
           if (photoCards.isEmpty) {
             return EmptyState(
               icon: Icons.photo_camera_rounded,
-              title: '아직 포토카드가 없습니다',
-              subtitle: '여정사진관에서 첫 포토카드를 만들어보세요!',
-              actionLabel: '첫 포토카드 만들기',
+              title: '아직 레일필름가 없습니다',
+              subtitle: '여정사진관에서 첫 레일필름를 만들어보세요!',
+              actionLabel: '첫 레일필름 만들기',
               onAction: () {
                 Navigator.push(
                   context,
@@ -221,7 +221,7 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
         // 검증 실패: 사용자에게 알림
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('유효하지 않은 포토카드입니다. 다시 생성해주세요.'),
+            content: Text('유효하지 않은 레일필름입니다. 다시 생성해주세요.'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ),
@@ -236,7 +236,7 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
       // 에러 처리
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('포토카드 검증 중 오류가 발생했습니다: $e'),
+          content: Text('레일필름 검증 중 오류가 발생했습니다: $e'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),

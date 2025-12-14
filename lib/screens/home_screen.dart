@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                '포토카드가 만남승강장의 티켓이 됩니다',
+                '레일필름가 만남승강장의 티켓이 됩니다',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ).animate().fadeIn(delay: 700.ms, duration: 500.ms).slideY(begin: 0.2, end: 0),
         const SizedBox(height: 16),
         SecondaryButton(
-          text: '포토카드 목록',
+          text: '레일필름 목록',
           icon: Icons.photo_library_rounded,
           onPressed: () {
             Navigator.push(
@@ -175,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildStatItem(
                   Icons.credit_card_rounded,
                   '${provider.photoCardCount}',
-                  '포토카드',
+                  '레일필름',
                   color: AppColors.primary,
                 ),
                 Container(

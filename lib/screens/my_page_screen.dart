@@ -51,7 +51,7 @@ class MyPageScreen extends StatelessWidget {
           _StatItem(
             icon: Icons.credit_card_rounded,
             count: provider.photoCardCount,
-            label: '포토카드',
+            label: '레일필름',
             color: AppColors.primary,
           ),
           Container(
@@ -86,7 +86,7 @@ class MyPageScreen extends StatelessWidget {
       children: [
         _MenuItem(
           icon: Icons.credit_card_rounded,
-          title: '나의 포토카드',
+          title: '나의 레일필름',
           color: AppColors.primary,
           onTap: () {
             Navigator.push(

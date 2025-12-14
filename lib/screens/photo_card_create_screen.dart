@@ -111,7 +111,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: '포토카드 생성'),
+      appBar: const CustomAppBar(title: '레일필름 생성'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -135,7 +135,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
 
             // Create Button
             PrimaryButton(
-              text: '포토카드 생성하기',
+              text: '레일필름 생성하기',
               onPressed: _canCreate ? _createPhotoCard : null,
               icon: Icons.auto_awesome_rounded,
             ).animate().fadeIn(delay: 400.ms),
