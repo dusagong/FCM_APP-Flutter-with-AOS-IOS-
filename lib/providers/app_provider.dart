@@ -28,6 +28,9 @@ class AppProvider extends ChangeNotifier {
   // Current destination (from PhotoCard)
   String? _currentProvince;
   String? _currentCity;
+  
+  // User Profile
+  String? _userProfileImage;
 
   // Getters
   List<PhotoCard> get photoCards => _photoCards;
@@ -42,6 +45,7 @@ class AppProvider extends ChangeNotifier {
       _reviewablePlaces.where((r) => !r.hasReviewed).toList();
   String? get currentProvince => _currentProvince;
   String? get currentCity => _currentCity;
+  String? get userProfileImage => _userProfileImage;
 
   // Stats
   int get photoCardCount => _photoCards.length;
@@ -67,6 +71,9 @@ class AppProvider extends ChangeNotifier {
           _currentProvince = currentCard.province;
           _currentCity = currentCard.city;
         }
+
+        // 프로필 이미지 로드
+        _userProfileImage = await PhotoCardStorageService.getUserProfileImage();
 
         notifyListeners();
       }
@@ -346,6 +353,30 @@ class AppProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // User Profile Method
+  Future<void> updateUserProfileImage(String imagePath) async {
+    try {
+      final File sourceFile = File(imagePath);
+      if (await sourceFile.exists()) {
+        // 영구 저장소로 복사
+        final directory = await getApplicationDocumentsDirectory();
+        final fileName = 'user_profile_${_uuid.v4()}.jpg';
+        final savedImage = await sourceFile.copy('${directory.path}/$fileName');
+        
+        // 상태 업데이트
+        _userProfileImage = savedImage.path;
+        
+        // 스토리지 저장
+        await PhotoCardStorageService.saveUserProfileImage(_userProfileImage!);
+        
+        notifyListeners();
+      }
+    } catch (e) {
+      print('프로필 이미지 업데이트 실패: $e');
+      throw e;
+    }
   }
 
   // Generate random AI quote
