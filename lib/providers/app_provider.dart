@@ -349,6 +349,11 @@ class AppProvider extends ChangeNotifier {
     return _coupons.any((c) => c.placeId == placeId && !c.isUsed);
   }
 
+  /// 장소 이름으로 쿠폰 소유 여부 확인 (API 장소용)
+  bool hasCouponByName(String placeName) {
+    return _coupons.any((c) => c.placeName == placeName && !c.isUsed);
+  }
+
   void addCoupon(Place place) {
     if (hasCoupon(place.id)) return;
 
@@ -359,6 +364,24 @@ class AppProvider extends ChangeNotifier {
       description: place.couponDescription ?? '',
       province: place.province,
       city: place.city,
+      receivedAt: DateTime.now(),
+    );
+
+    _coupons.add(coupon);
+    notifyListeners();
+  }
+
+  /// 장소 이름으로 쿠폰 추가 (API 장소용)
+  void addCouponByName(String placeName, String category) {
+    if (hasCouponByName(placeName)) return;
+
+    final coupon = Coupon(
+      id: _uuid.v4(),
+      placeId: 'api_${_uuid.v4()}', // API 장소용 임시 ID
+      placeName: placeName,
+      description: '10% 할인',
+      province: _currentProvince ?? '',
+      city: _currentCity ?? '',
       receivedAt: DateTime.now(),
     );
 
@@ -412,9 +435,9 @@ class AppProvider extends ChangeNotifier {
       // In a real app, we'd update the place object
     }
 
-    // Mark reviewable place as reviewed
+    // Mark reviewable place as reviewed (placeId 또는 placeName으로 매칭)
     final reviewableIndex = _reviewablePlaces.indexWhere(
-      (r) => r.placeId == review.placeId && !r.hasReviewed,
+      (r) => (r.placeId == review.placeId || r.placeName == review.placeName) && !r.hasReviewed,
     );
     if (reviewableIndex != -1) {
       _reviewablePlaces[reviewableIndex] = ReviewablePlace(

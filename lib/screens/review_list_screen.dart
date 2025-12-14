@@ -8,12 +8,19 @@ import '../providers/app_provider.dart';
 import '../widgets/common_widgets.dart';
 
 class ReviewListScreen extends StatelessWidget {
-  final Place place;
+  final Place? place;
+  final String? placeName;
+  final String? placeCategory;
 
   const ReviewListScreen({
     super.key,
-    required this.place,
-  });
+    this.place,
+    this.placeName,
+    this.placeCategory,
+  }) : assert(place != null || placeName != null, 'place 또는 placeName 중 하나는 필수입니다');
+
+  String get _displayName => place?.name ?? placeName ?? '';
+  String get _placeId => place?.id ?? 'api_$_displayName';
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +29,8 @@ class ReviewListScreen extends StatelessWidget {
       appBar: const CustomAppBar(title: '리뷰'),
       body: Consumer<AppProvider>(
         builder: (context, provider, _) {
-          final reviews = provider.getReviewsByPlace(place.id);
-          final avgRating = provider.getAverageRating(place.id);
+          final reviews = provider.getReviewsByPlace(_placeId);
+          final avgRating = provider.getAverageRating(_placeId);
 
           return Column(
             children: [
@@ -76,7 +83,7 @@ class ReviewListScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  place.name,
+                  _displayName,
                   style: AppTypography.titleLarge,
                 ),
                 const SizedBox(height: 4),
