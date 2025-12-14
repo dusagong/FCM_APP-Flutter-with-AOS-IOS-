@@ -186,8 +186,15 @@ class RecommendationResponse {
   });
 
   factory RecommendationResponse.fromJson(Map<String, dynamic> json) {
+    // 세션 API는 status: "completed"로 성공 여부 판단
+    // 기존 추천 API는 success: true/false
+    final isSessionResponse = json.containsKey('status');
+    final success = isSessionResponse
+        ? json['status'] == 'completed'
+        : (json['success'] ?? false);
+
     return RecommendationResponse(
-      success: json['success'] ?? false,
+      success: success,
       query: json['query'] ?? '',
       areaCode: json['area_code'],
       sigunguCode: json['sigungu_code'],
