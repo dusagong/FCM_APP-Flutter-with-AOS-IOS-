@@ -111,7 +111,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: '포토카드 생성'),
+      appBar: const CustomAppBar(title: '레일필름 생성'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -135,7 +135,7 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
 
             // Create Button
             PrimaryButton(
-              text: '포토카드 생성하기',
+              text: '레일필름 생성하기',
               onPressed: _canCreate ? _createPhotoCard : null,
               icon: Icons.auto_awesome_rounded,
             ).animate().fadeIn(delay: 400.ms),
@@ -159,6 +159,20 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
         child: Image.file(
           File(widget.imagePath),
           fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.surfaceVariant,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.broken_image_rounded,
+                      color: AppColors.textTertiary, size: 48),
+                  const SizedBox(height: 8),
+                  Text('이미지를 불러올 수 없습니다', style: AppTypography.bodySmall),
+                ],
+              ),
+            );
+          },
         ),
       ),
     ).animate().fadeIn(duration: 300.ms).scale(
@@ -181,27 +195,64 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _messageController,
-          maxLength: 50,
-          maxLines: 3,
-          minLines: 3,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
+        Container(
+          height: 150, // Slightly shorter than review write
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDF5), // Warm paper color
+            borderRadius: BorderRadius.circular(AppBorderRadius.md),
+            boxShadow: AppShadows.small,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Stack(
+            children: [
+              // Lined Paper Pattern
+              IgnorePointer(
+                child: CustomPaint(
+                  size: const Size(double.infinity, double.infinity),
+                  painter: _LinedPaperPainter(),
+                ),
+              ),
+              // Text Field
+              TextField(
+                controller: _messageController,
+                maxLength: 50,
+                maxLines: null,
+                expands: true,
+                style: AppTypography.bodyMedium.copyWith(
+                  height: 1.8,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: '여행의 설렘을 남겨보세요',
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textTertiary.withOpacity(0.5),
+                    height: 1.8,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  counterText: "", // Hide default counter, maybe show custom one if needed or relying on max length
+                ),
+              ),
+              // Custom counter position
+              Positioned(
+                bottom: 8,
+                right: 16,
+                child: ValueListenableBuilder(
+                  valueListenable: _messageController,
+                  builder: (context, TextEditingValue value, __) {
+                    return Text(
+                      '${value.text.length}/50',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -391,4 +442,29 @@ class _PhotoCardCreateScreenState extends State<PhotoCardCreateScreen> {
       ],
     ).animate().fadeIn(delay: 300.ms);
   }
+}
+
+class _LinedPaperPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.border.withOpacity(0.5)
+      ..strokeWidth = 1;
+
+    double lineHeight = 28.0; 
+    double startY = 36.0; 
+    
+    while (startY < size.height) {
+      canvas.drawLine(Offset(20, startY), Offset(size.width - 20, startY), paint);
+      startY += lineHeight;
+    }
+    
+    final marginPaint = Paint()
+      ..color = Colors.red.withOpacity(0.1)
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(60, 0), Offset(60, size.height), marginPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

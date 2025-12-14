@@ -1,99 +1,79 @@
-# FCM Test App
+# 코레일 동행열차
 
-Flutter 앱에서 Firebase Cloud Messaging(FCM) 푸시 알림을 테스트하기 위한 템플릿 프로젝트입니다.
+사랑하는 사람과 함께하는 특별한 기차 여행을 위한 Flutter 앱입니다.
 
-## 기능
+## 주요 기능
 
-- FCM 토큰 발급 및 표시
-- 포그라운드/백그라운드 푸시 알림 수신
-- 알림 클릭 처리
-- 토픽 구독/해제
+### 레일필름 (포토카드)
+- 여행 사진으로 레일필름 생성
+- AI 기반 여행 메시지 및 해시태그 자동 생성
+- QR 코드가 포함된 티켓 스타일 디자인
+- 앞/뒷면 카드 뒤집기 애니메이션
+- SNS 공유 기능
 
-## 사전 준비
+### 만남승강장
+- 레일필름을 통한 다른 여행자와의 매칭
+- 실시간 채팅 기능
+- 상대방 프로필 확인
 
-1. **Flutter 개발 환경 설정**
-2. **Firebase 프로젝트 생성**
-   - [Firebase Console](https://console.firebase.google.com/)에서 새 프로젝트 생성
-   - Android/iOS 앱 추가
+### 쿠폰
+- 지역 제휴 쿠폰 발급
+- QR 코드 스캔을 통한 쿠폰 사용
+- 사용 내역 관리
 
-## 설정 방법
+### 리뷰
+- 방문 장소 리뷰 작성
+- 별점 및 사진 첨부
+- 내가 쓴 리뷰 관리
 
-### 1. Firebase 설정 파일 추가
+## 기술 스택
 
-**Android:**
-```
-android/app/google-services.json
-```
+- **Framework**: Flutter
+- **State Management**: Provider
+- **Backend API**: REST API (Travel API Service)
+- **Image Processing**: image_picker, image_cropper
+- **QR Code**: qr_flutter
+- **Animations**: flutter_animate
 
-**iOS:**
-```
-ios/Runner/GoogleService-Info.plist
-```
-
-### 2. Firebase CLI 설정 (선택사항)
-
-```bash
-# Firebase CLI 설치
-npm install -g firebase-tools
-
-# Firebase 로그인
-firebase login
-
-# Firebase 프로젝트 초기화
-firebase init
-
-# FlutterFire CLI 설치 및 설정
-dart pub global activate flutterfire_cli
-flutterfire configure
-```
-
-### 3. 의존성 설치
+## 설치 및 실행
 
 ```bash
+# 의존성 설치
 flutter pub get
-```
 
-### 4. 앱 실행
+# iOS 설정 (macOS)
+cd ios && pod install && cd ..
 
-```bash
+# 앱 실행
 flutter run
 ```
 
-## FCM 토큰 확인
+## 프로젝트 구조
 
-앱 실행 후 메인 화면에서 FCM 토큰을 확인할 수 있습니다. 이 토큰을 사용하여 서버에서 푸시 알림을 전송할 수 있습니다.
+```
+lib/
+├── main.dart              # 앱 진입점
+├── models/                # 데이터 모델
+├── providers/             # 상태 관리
+├── screens/               # 화면 UI
+│   ├── home_screen.dart
+│   ├── camera_screen.dart
+│   ├── photo_card_result_screen.dart
+│   ├── photo_card_list_screen.dart
+│   ├── meeting_platform_screen.dart
+│   ├── coupon_screen.dart
+│   └── ...
+├── services/              # API 서비스
+├── theme/                 # 앱 테마
+└── widgets/               # 공통 위젯
+```
 
-## 푸시 알림 테스트
+## 주요 화면
 
-1. **Firebase Console에서 테스트**
-   - Firebase Console > Cloud Messaging
-   - "첫 번째 캠페인 만들기" 또는 "새 알림"
-   - 앱의 FCM 토큰 입력하여 테스트
+| 홈 | 레일필름 생성 | 레일필름 목록 |
+|:---:|:---:|:---:|
+| 메인 화면 | 사진 촬영 후 카드 생성 | 저장된 카드 목록 |
 
-2. **서버에서 테스트**
-   - 별도의 Node.js 서버 또는 Postman 사용
-   - FCM API를 통해 알림 전송
+## 라이센스
 
-## 주요 파일
-
-- `lib/main.dart` - 메인 앱 코드 및 FCM 설정
-- `lib/firebase_options.dart` - Firebase 설정 (자동 생성)
-- `android/app/google-services.json` - Android Firebase 설정
-- `ios/Runner/GoogleService-Info.plist` - iOS Firebase 설정
-
-## 주의사항
-
-- Firebase 설정 파일들은 `.gitignore`에 포함되어 있습니다
-- 실제 프로덕션에서는 보안을 위해 민감한 정보를 별도 관리하세요
-- iOS에서는 푸시 알림 권한 요청이 필요합니다
-
-## 문제 해결
-
-### Android
-- `google-services.json` 파일이 올바른 위치에 있는지 확인
-- 앱 패키지명이 Firebase 프로젝트와 일치하는지 확인
-
-### iOS
-- `GoogleService-Info.plist` 파일이 Xcode 프로젝트에 추가되었는지 확인
-- 푸시 알림 권한이 허용되었는지 확인
-- Capabilities에서 Push Notifications가 활성화되었는지 확인
+This project is proprietary software.

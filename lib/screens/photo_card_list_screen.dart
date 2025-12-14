@@ -7,10 +7,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/common_widgets.dart';
+import '../widgets/photo_card_widget.dart';
 import '../services/travel_api_service.dart';
 import 'camera_screen.dart';
 import 'meeting_platform_loading_screen.dart';
@@ -22,7 +24,7 @@ class PhotoCardListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: '나의 포토카드'),
+      appBar: const CustomAppBar(title: '나의 레일필름'),
       body: Consumer<AppProvider>(
         builder: (context, provider, _) {
           final photoCards = provider.photoCards;
@@ -30,9 +32,9 @@ class PhotoCardListScreen extends StatelessWidget {
           if (photoCards.isEmpty) {
             return EmptyState(
               icon: Icons.photo_camera_rounded,
-              title: '아직 포토카드가 없습니다',
-              subtitle: '여정사진관에서 첫 포토카드를 만들어보세요!',
-              actionLabel: '첫 포토카드 만들기',
+              title: '아직 레일필름이 없습니다',
+              subtitle: '여정사진관에서 첫 레일필름를 만들어보세요!',
+              actionLabel: '첫 레일필름 만들기',
               onAction: () {
                 Navigator.push(
                   context,
@@ -111,6 +113,15 @@ class _PhotoCardGridItem extends StatelessWidget {
                       ? Image.file(
                           File(photoCard.imagePath!),
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                size: 40,
+                                color: AppColors.textTertiary.withValues(alpha: 0.5),
+                              ),
+                            );
+                          },
                         )
                       : Center(
                           child: Icon(
@@ -179,6 +190,7 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
   bool _showFront = true;
   final GlobalKey _cardKey = GlobalKey();
   bool _isSharing = false;
+  final GlobalKey _shareKey = GlobalKey();
 
   void _toggleCard() {
     setState(() => _showFront = !_showFront);
@@ -218,7 +230,7 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
         // 검증 실패: 사용자에게 알림
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('유효하지 않은 포토카드입니다. 다시 생성해주세요.'),
+            content: Text('유효하지 않은 레일필름입니다. 다시 생성해주세요.'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ),
@@ -233,7 +245,7 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
       // 에러 처리
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('포토카드 검증 중 오류가 발생했습니다: $e'),
+          content: Text('레일필름 검증 중 오류가 발생했습니다: $e'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
@@ -277,10 +289,17 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
         throw Exception('파일이 비어있습니다');
       }
 
+      // 공유 버튼 위치 계산
+      final box = _shareKey.currentContext?.findRenderObject() as RenderBox?;
+      final sharePositionOrigin = box != null 
+          ? box.localToGlobal(Offset.zero) & box.size 
+          : null;
+
       // 공유
       await Share.shareXFiles(
         [XFile(file.path)],
         text: '${widget.photoCard.message}\n\n#코레일동행열차 #${widget.photoCard.city} ${widget.photoCard.hashtags.map((t) => '#$t').join(' ')}',
+        sharePositionOrigin: sharePositionOrigin,
       );
     } catch (e) {
       debugPrint('Share error: $e');
@@ -329,16 +348,18 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
           // Card
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: GestureDetector(
                 onTap: _toggleCard,
                 child: RepaintBoundary(
                   key: _cardKey,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
-                    child: _showFront
-                        ? _buildFrontCard()
-                        : _buildBackCard(),
+                    child: PhotoCardWidget(
+                      key: ValueKey(_showFront),
+                      photoCard: widget.photoCard,
+                      isFront: _showFront,
+                    ),
                   ),
                 ),
               ),
@@ -346,149 +367,6 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
           ),
           // Actions
           _buildActions(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFrontCard() {
-    return Container(
-      key: const ValueKey('front'),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppBorderRadius.xl),
-        boxShadow: AppShadows.medium,
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: AppColors.primaryGradient,
-              ),
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(AppBorderRadius.xl),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                'KORAIL LOVE PHOTO CARD',
-                style: AppTypography.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          ),
-          // Image
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.all(12),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                child: widget.photoCard.imagePath != null
-                    ? Image.file(
-                        File(widget.photoCard.imagePath!),
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      )
-                    : Container(
-                        color: AppColors.surfaceVariant,
-                        child: const Icon(Icons.photo_rounded, size: 48),
-                      ),
-              ),
-            ),
-          ),
-          // Message
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              '"${widget.photoCard.message}"',
-              style: AppTypography.bodyMedium.copyWith(fontStyle: FontStyle.italic),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Hashtags
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 6,
-            children: widget.photoCard.hashtags.take(3).map((tag) {
-              return Text('#$tag', style: AppTypography.hashTag.copyWith(fontSize: 12));
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          // Location
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppBorderRadius.full),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.location_on_rounded, size: 14, color: AppColors.primary),
-                const SizedBox(width: 4),
-                Text(
-                  widget.photoCard.destination,
-                  style: AppTypography.labelSmall.copyWith(color: AppColors.primary),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBackCard() {
-    return Container(
-      key: const ValueKey('back'),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: AppColors.twilightGradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppBorderRadius.xl),
-        boxShadow: AppShadows.medium,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              '"${widget.photoCard.aiQuote}"',
-              style: AppTypography.photoCardQuote.copyWith(
-                color: Colors.white,
-                fontSize: 18,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.train_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'KORAIL',
-                style: AppTypography.titleMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -505,10 +383,14 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
             onPressed: _toggleCard,
           ),
           const SizedBox(height: 12),
-          SecondaryButton(
-            text: _isSharing ? '공유 준비 중...' : 'SNS 공유하기',
-            icon: _isSharing ? Icons.hourglass_empty_rounded : Icons.share_rounded,
-            onPressed: _isSharing ? null : () => _sharePhotoCard(context),
+          Container(
+            key: _shareKey,
+            width: double.infinity,
+            child: SecondaryButton(
+              text: _isSharing ? '공유 준비 중...' : 'SNS 공유하기',
+              icon: _isSharing ? Icons.hourglass_empty_rounded : Icons.share_rounded,
+              onPressed: _isSharing ? null : () => _sharePhotoCard(context),
+            ),
           ),
           const SizedBox(height: 12),
           PrimaryButton(
@@ -520,4 +402,7 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
       ),
     );
   }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

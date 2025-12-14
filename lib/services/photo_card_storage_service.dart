@@ -8,6 +8,7 @@ import '../models/photo_card.dart';
 class PhotoCardStorageService {
   static const String _photoCardsKey = 'photo_cards_list';
   static const String _currentPhotoCardIdKey = 'current_photo_card_id';
+  static const String _userProfileImageKey = 'user_profile_image';
 
   /// PhotoCard 저장
   /// 서버에서 받은 ID와 함께 로컬에 저장
@@ -124,5 +125,17 @@ class PhotoCardStorageService {
   static Future<int> getPhotoCardCount() async {
     final photoCards = await getAllPhotoCards();
     return photoCards.length;
+  }
+
+  /// 사용자 프로필 이미지 저장
+  static Future<void> saveUserProfileImage(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userProfileImageKey, path);
+  }
+
+  /// 사용자 프로필 이미지 조회
+  static Future<String?> getUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userProfileImageKey);
   }
 }

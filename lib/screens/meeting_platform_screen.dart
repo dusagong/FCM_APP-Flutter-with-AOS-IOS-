@@ -53,7 +53,7 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
         title: Column(
           children: [
             Text(
-              '${widget.photoCard.city} 여행 추천 코스',
+              '${widget.photoCard.city} 데이트 추천 코스',
               style: AppTypography.titleMedium,
             ),
           ],
@@ -90,24 +90,72 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppBorderRadius.full),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(AppBorderRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600),
+        labelStyle: AppTypography.labelMedium.copyWith(
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
         tabs: const [
-          Tab(text: '코스'),
-          Tab(text: '전체'),
-          Tab(text: '지도'),
+          Tab(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.timeline_rounded, size: 18),
+                SizedBox(width: 6),
+                Text('코스'),
+              ],
+            ),
+          ),
+          Tab(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.grid_view_rounded, size: 18),
+                SizedBox(width: 6),
+                Text('전체'),
+              ],
+            ),
+          ),
+          Tab(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.map_rounded, size: 18),
+                SizedBox(width: 6),
+                Text('지도'),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -553,38 +601,56 @@ class _PlaceItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline
-          Column(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '$index',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          // Rail Track Timeline
+          SizedBox(
+            width: 40,
+            child: Column(
+              children: [
+                // Station Node
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$index',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 80,
-                  color: AppColors.border,
-                ),
-            ],
+                // Rail Track
+                if (!isLast)
+                  Expanded(
+                    child: CustomPaint(
+                      painter: _RailLinePainter(),
+                      size: const Size(32, double.infinity),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           // Content
           Expanded(
             child: Container(
@@ -639,6 +705,7 @@ class _PlaceItem extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -660,6 +727,131 @@ class _PlaceActionButtons extends StatelessWidget {
   final Place place;
 
   const _PlaceActionButtons({required this.place});
+
+  void _showCouponReceivedModal(BuildContext context, Place place) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Success icon - Blue Theme
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: AppColors.primary,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              Text(
+                '쿠폰을 받았습니다!',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              // Place name
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.store_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        place.name,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Description
+              Text(
+                '쿠폰함에서 확인하고\n매장에서 사용해보세요!',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                        ),
+                      ),
+                      child: const Text('닫기', style: TextStyle(color: AppColors.primary)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CouponScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('쿠폰함 보기'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -694,22 +886,7 @@ class _PlaceActionButtons extends StatelessWidget {
                     ? null
                     : () {
                         provider.addCoupon(place);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${place.name} 쿠폰을 받았습니다!'),
-                            action: SnackBarAction(
-                              label: '쿠폰함 보기',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const CouponScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
+                        _showCouponReceivedModal(context, place);
                       },
               )
             else
@@ -1353,4 +1530,50 @@ class _SpotListChips extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RailLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final railPaint = Paint()
+      ..color = AppColors.primary.withOpacity(0.5)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    final tiePaint = Paint()
+      ..color = AppColors.primary.withOpacity(0.3)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    // Draw main rails (two parallel lines)
+    final double centerX = size.width / 2;
+    final double railOffset = 6.0;
+
+    canvas.drawLine(
+      Offset(centerX - railOffset, 0),
+      Offset(centerX - railOffset, size.height),
+      railPaint,
+    );
+
+    canvas.drawLine(
+      Offset(centerX + railOffset, 0),
+      Offset(centerX + railOffset, size.height),
+      railPaint,
+    );
+
+    // Draw cross ties (sleepers)
+    final double tieSpacing = 12.0;
+    final double tieWidth = 20.0;
+
+    for (double y = 4; y < size.height; y += tieSpacing) {
+      canvas.drawLine(
+        Offset(centerX - tieWidth / 2, y),
+        Offset(centerX + tieWidth / 2, y),
+        tiePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

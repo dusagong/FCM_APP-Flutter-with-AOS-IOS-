@@ -281,33 +281,78 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             icon: Icons.photo_library_rounded,
             onTap: _pickFromGallery,
           ),
-          // Capture button
+          // Mechanical Shutter Button
           GestureDetector(
             onTap: (_isInitialized && !_isCapturing) ? _takePicture : null,
-            child: Container(
-              width: 80,
-              height: 80,
+            child: AnimatedContainer(
+              duration: 100.ms,
+              width: 84,
+              height: 84,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
-              ),
-              child: Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: (_isInitialized && !_isCapturing) ? Colors.white : Colors.grey,
+                gradient: const LinearGradient(
+                  colors: [Colors.grey, Colors.white, Colors.grey],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  child: _isCapturing
-                      ? const Padding(
-                          padding: EdgeInsets.all(20),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : null,
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF222222), // Dark inner ring
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: _isCapturing
+                              ? [Colors.red.shade900, Colors.red.shade700]
+                              : [Colors.white, Colors.grey.shade300],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        boxShadow: [
+                           if (!_isCapturing)
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 2,
+                              offset: const Offset(0, 2),
+                            ),
+                        ],
+                      ),
+                      child: _isCapturing
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Center(
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -356,10 +401,20 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppBorderRadius.xl),
-              child: Image.file(
+                child: Image.file(
                 File(_capturedImage!.path),
                 fit: BoxFit.cover,
                 width: double.infinity,
+                errorBuilder: (_, __, ___) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.broken_image_rounded, color: Colors.white, size: 48),
+                      const SizedBox(height: 8),
+                      Text('이미지 로드 실패', style: AppTypography.bodySmall.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ).animate().fadeIn(duration: 300.ms).scale(

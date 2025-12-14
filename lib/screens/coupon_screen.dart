@@ -65,164 +65,150 @@ class _CouponCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        boxShadow: AppShadows.small,
-        border: coupon.isUsed
-            ? Border.all(color: AppColors.border)
-            : null,
-      ),
-      child: Opacity(
-        opacity: coupon.isUsed ? 0.6 : 1.0,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with place name
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: coupon.isUsed
-                    ? AppColors.surfaceVariant
-                    : AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(AppBorderRadius.lg),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: coupon.isUsed
-                          ? AppColors.textTertiary
-                          : AppColors.primary,
-                      borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                    ),
-                    child: const Icon(
-                      Icons.store_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      coupon.placeName,
-                      style: AppTypography.titleMedium.copyWith(
-                        color: coupon.isUsed
-                            ? AppColors.textSecondary
-                            : AppColors.textPrimary,
+      child: CustomPaint(
+        painter: _TicketShadowPainter(),
+        child: ClipPath(
+          clipper: _TicketClipper(),
+          child: Container(
+            color: Colors.white,
+            child: Row(
+              children: [
+                // Left Stub (Icon & status)
+                Container(
+                  width: 90,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    color: coupon.isUsed
+                        ? AppColors.surfaceVariant
+                        : AppColors.secondary.withOpacity(0.05),
+                    border: Border(
+                      right: BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                        style: BorderStyle.none, // We'll draw dashed line manually if needed, or just let color diff show
                       ),
                     ),
                   ),
-                  if (coupon.isUsed)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.textTertiary,
-                        borderRadius: BorderRadius.circular(AppBorderRadius.sm),
-                      ),
-                      child: Text(
-                        '사용완료',
-                        style: AppTypography.labelSmall.copyWith(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: coupon.isUsed
+                              ? AppColors.textTertiary
+                              : AppColors.secondary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.local_activity_rounded, // Ticket icon
                           color: Colors.white,
+                          size: 24,
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Coupon description
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.card_giftcard_rounded,
-                        color: AppColors.secondary,
-                        size: 20,
+                      const SizedBox(height: 8),
+                      Text(
+                        coupon.isUsed ? 'USED' : 'VALID',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: coupon.isUsed
+                              ? AppColors.textTertiary
+                              : AppColors.secondary,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
+                    ],
+                  ),
+                ),
+                // Dashed Line Separator
+                CustomPaint(
+                  size: const Size(1, 120), // Approx height
+                  painter: _DashedLinePainter(),
+                ),
+                // Right Main Area
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          coupon.placeName,
+                          style: AppTypography.labelMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
                           coupon.description,
-                          style: AppTypography.titleLarge.copyWith(
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
                             color: coupon.isUsed
-                                ? AppColors.textSecondary
-                                : AppColors.secondary,
-                            fontWeight: FontWeight.w700,
+                                ? AppColors.textTertiary
+                                : AppColors.textPrimary,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Location
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        color: AppColors.textTertiary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${coupon.province} ${coupon.city}',
-                        style: AppTypography.bodySmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  // Date
-                  Row(
-                    children: [
-                      Icon(
-                        coupon.isUsed
-                            ? Icons.check_circle_outline
-                            : Icons.access_time_rounded,
-                        color: AppColors.textTertiary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        coupon.isUsed
-                            ? '사용일: ${coupon.formattedUsedDate}'
-                            : '발급일: ${coupon.formattedReceivedDate}',
-                        style: AppTypography.bodySmall,
-                      ),
-                    ],
-                  ),
-                  // Use button
-                  if (!coupon.isUsed) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => _showUseCouponModal(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                          ),
+                        const SizedBox(height: 12),
+                        // Info Row
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${coupon.province} ${coupon.city}',
+                              style: AppTypography.bodySmall.copyWith(fontSize: 12),
+                            ),
+                          ],
                         ),
-                        child: const Text('사용하기'),
-                      ),
+                        const SizedBox(height: 4),
+                         Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 14,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              coupon.isUsed
+                                  ? '사용: ${coupon.formattedUsedDate}'
+                                  : '발급: ${coupon.formattedReceivedDate}',
+                              style: AppTypography.bodySmall.copyWith(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                        // Button if active
+                        if (!coupon.isUsed) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 36,
+                            child: ElevatedButton(
+                              onPressed: () => _showUseCouponModal(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: EdgeInsets.zero,
+                              ),
+                              child: const Text('사용하기', style: TextStyle(fontSize: 13)),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     ).animate().fadeIn(
@@ -240,6 +226,82 @@ class _CouponCard extends StatelessWidget {
     );
   }
 }
+
+class _TicketClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    double radius = 10.0;
+    double stubWidth = 90.0;
+    
+    path.moveTo(0, 0);
+    path.lineTo(stubWidth - radius, 0);
+    
+    // Top Notch
+    path.arcToPoint(
+      Offset(stubWidth + radius, 0),
+      radius: Radius.circular(radius),
+      clockwise: false,
+    );
+    
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(stubWidth + radius, size.height);
+    
+    // Bottom Notch
+    path.arcToPoint(
+      Offset(stubWidth - radius, size.height),
+      radius: Radius.circular(radius),
+      clockwise: false,
+    );
+    
+    path.lineTo(0, size.height);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class _TicketShadowPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // A simplified shadow painter that mimics the clipper shape roughly
+    // Or we can just use a localized shadow
+    
+    // For simplicity in this iteration, we might skip complex custom shadow painting 
+    // or draw a simple rect shadow with margin. 
+    // Ideally we should pass the same path.
+    
+    Path path = _TicketClipper().getClip(size);
+    canvas.drawShadow(path, Colors.black.withOpacity(0.1), 4.0, false);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+class _DashedLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = AppColors.border
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    double dashHeight = 5, dashSpace = 3, startY = 10;
+    while (startY < size.height - 10) {
+      canvas.drawLine(Offset(0, startY), Offset(0, startY + dashHeight), paint);
+      startY += dashHeight + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+
 
 class _CouponPinModal extends StatefulWidget {
   final Coupon coupon;
@@ -427,32 +489,6 @@ class _CouponPinModalState extends State<_CouponPinModal> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            // Hint
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppBorderRadius.sm),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.lightbulb_outline_rounded,
-                    color: AppColors.warning,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '프로토타입용: 1234',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.warning,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 24),
             // Buttons
             Row(

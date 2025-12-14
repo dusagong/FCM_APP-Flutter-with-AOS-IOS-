@@ -7,10 +7,10 @@ class AppColors {
   static const Color primaryDark = Color(0xFF004C99);
   static const Color primaryLight = Color(0xFF3D8FDB);
 
-  // Secondary Colors - Warm Orange
-  static const Color secondary = Color(0xFFFF6B4A);
-  static const Color secondaryDark = Color(0xFFE5533A);
-  static const Color secondaryLight = Color(0xFFFF8A70);
+  // Secondary Colors - Fresh Green
+  static const Color secondary = Color(0xFF5AC855);
+  static const Color secondaryDark = Color(0xFF3DA838);
+  static const Color secondaryLight = Color(0xFF7ED87A);
 
   // Accent Colors
   static const Color accent = Color(0xFFFFD93D);
@@ -44,8 +44,8 @@ class AppColors {
   ];
 
   static const List<Color> sunriseGradient = [
-    Color(0xFFFF6B4A),
-    Color(0xFFFFD93D),
+    Color(0xFF3DA838),
+    Color(0xFF5AC855),
   ];
 
   static const List<Color> twilightGradient = [

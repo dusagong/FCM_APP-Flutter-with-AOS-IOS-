@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/travel_api_service.dart';
@@ -26,6 +28,9 @@ class AppProvider extends ChangeNotifier {
   // Current destination (from PhotoCard)
   String? _currentProvince;
   String? _currentCity;
+  
+  // User Profile
+  String? _userProfileImage;
 
   // 추천 API 결과
   RecommendationResponse? _recommendationResponse;
@@ -45,6 +50,7 @@ class AppProvider extends ChangeNotifier {
       _reviewablePlaces.where((r) => !r.hasReviewed).toList();
   String? get currentProvince => _currentProvince;
   String? get currentCity => _currentCity;
+  String? get userProfileImage => _userProfileImage;
 
   // 추천 API 결과 Getters
   RecommendationResponse? get recommendationResponse => _recommendationResponse;
@@ -78,6 +84,9 @@ class AppProvider extends ChangeNotifier {
           _currentCity = currentCard.city;
         }
 
+        // 프로필 이미지 로드
+        _userProfileImage = await PhotoCardStorageService.getUserProfileImage();
+
         notifyListeners();
       }
     } catch (e) {
@@ -109,14 +118,32 @@ class AppProvider extends ChangeNotifier {
     String? imagePath,
   }) async {
     try {
+      String? savedImagePath;
+
+      // 이미지 영구 저장 처리
+      if (imagePath != null) {
+        final File sourceFile = File(imagePath);
+        if (await sourceFile.exists()) {
+          final directory = await getApplicationDocumentsDirectory();
+          final fileName = 'photocard_${_uuid.v4()}.jpg'; // Unique name
+          final savedImage = await sourceFile.copy('${directory.path}/$fileName');
+          savedImagePath = savedImage.path;
+          print('✅ [IMAGE SAVED] Saved to: $savedImagePath');
+        } else {
+          print('⚠️ [IMAGE WARNING] Source file does not exist: $imagePath');
+        }
+      }
+
       // 1. 서버에 PhotoCard 생성 요청
+      // Note: 서버에는 원본 경로(혹은 업로드 로직)를 보낼 수도 있지만, 
+      // 현재 로직상 로컬 경로가 중요하므로 여기서는 메타데이터 생성을 우선함.
       final response = await TravelApiService.createPhotoCard(
         province: province,
         city: city,
         message: message,
         hashtags: hashtags,
         aiQuote: aiQuote,
-        imagePath: imagePath,
+        imagePath: savedImagePath ?? imagePath, // Use saved path if available
       );
 
       // 2. 서버 응답으로 PhotoCard 객체 생성
@@ -127,7 +154,7 @@ class AppProvider extends ChangeNotifier {
         message: message,
         hashtags: hashtags,
         aiQuote: aiQuote,
-        imagePath: imagePath,
+        imagePath: savedImagePath ?? imagePath, // Use persistence path
         createdAt: DateTime.parse(response['created_at']),
         isDefault: false,
       );
@@ -386,6 +413,30 @@ class AppProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // User Profile Method
+  Future<void> updateUserProfileImage(String imagePath) async {
+    try {
+      final File sourceFile = File(imagePath);
+      if (await sourceFile.exists()) {
+        // 영구 저장소로 복사
+        final directory = await getApplicationDocumentsDirectory();
+        final fileName = 'user_profile_${_uuid.v4()}.jpg';
+        final savedImage = await sourceFile.copy('${directory.path}/$fileName');
+        
+        // 상태 업데이트
+        _userProfileImage = savedImage.path;
+        
+        // 스토리지 저장
+        await PhotoCardStorageService.saveUserProfileImage(_userProfileImage!);
+        
+        notifyListeners();
+      }
+    } catch (e) {
+      print('프로필 이미지 업데이트 실패: $e');
+      throw e;
+    }
   }
 
   // Generate random AI quote
