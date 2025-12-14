@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/travel_api_service.dart';
 import '../services/photo_card_storage_service.dart';
-import '../data/mock/mock_data.dart';
 
 
 class AppProvider extends ChangeNotifier {
@@ -32,6 +31,11 @@ class AppProvider extends ChangeNotifier {
   // User Profile
   String? _userProfileImage;
 
+  // 추천 API 결과
+  RecommendationResponse? _recommendationResponse;
+  bool _isLoadingRecommendation = false;
+  String? _recommendationError;
+
   // Getters
   List<PhotoCard> get photoCards => _photoCards;
   PhotoCard? get currentPhotoCard => _currentPhotoCard;
@@ -46,6 +50,13 @@ class AppProvider extends ChangeNotifier {
   String? get currentProvince => _currentProvince;
   String? get currentCity => _currentCity;
   String? get userProfileImage => _userProfileImage;
+
+  // 추천 API 결과 Getters
+  RecommendationResponse? get recommendationResponse => _recommendationResponse;
+  bool get isLoadingRecommendation => _isLoadingRecommendation;
+  String? get recommendationError => _recommendationError;
+  List<SpotWithLocation> get recommendedSpots => _recommendationResponse?.spots ?? [];
+  RecommendedCourse? get recommendedCourse => _recommendationResponse?.course;
 
   // Stats
   int get photoCardCount => _photoCards.length;
@@ -83,10 +94,10 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _initSampleData() {
-    // MockData에서 테스트 데이터 로드
-    _photoCards = MockData.getMockPhotoCards();
-    _places = MockData.getMockPlaces();
-    _reviews = MockData.getMockReviews();
+    // 목업 데이터 제거 - 실제 데이터만 사용
+    _photoCards = [];
+    _places = [];
+    _reviews = [];
 
     notifyListeners();
   }
@@ -122,16 +133,22 @@ class AppProvider extends ChangeNotifier {
         }
       }
 
-      // 1. 서버에 PhotoCard 생성 요청
-      // Note: 서버에는 원본 경로(혹은 업로드 로직)를 보낼 수도 있지만, 
-      // 현재 로직상 로컬 경로가 중요하므로 여기서는 메타데이터 생성을 우선함.
+      // 1. area_code, sigungu_code 변환
+      final codes = TravelApiService.getAreaCodes(province, city);
+      final areaCode = codes['area_code'];
+      final sigunguCode = codes['sigungu_code'];
+
+      // 2. 서버에 PhotoCard 생성 요청
+      // area_code + sigungu_code를 함께 전달하면 백그라운드에서 추천 요청이 시작됨
       final response = await TravelApiService.createPhotoCard(
         province: province,
         city: city,
         message: message,
         hashtags: hashtags,
         aiQuote: aiQuote,
-        imagePath: savedImagePath ?? imagePath, // Use saved path if available
+        imagePath: savedImagePath ?? imagePath,
+        areaCode: areaCode,
+        sigunguCode: sigunguCode,
       );
 
       // 2. 서버 응답으로 PhotoCard 객체 생성
@@ -217,6 +234,62 @@ class AppProvider extends ChangeNotifier {
     _currentPhotoCard = null;
     _currentProvince = null;
     _currentCity = null;
+    notifyListeners();
+  }
+
+  // 추천 API Methods
+
+  /// 여행 추천 API 호출
+  /// PhotoCard의 지역 정보 + 사용자 쿼리로 추천 요청
+  Future<RecommendationResponse?> fetchRecommendations({
+    required String query,
+    required String province,
+    required String city,
+  }) async {
+    _isLoadingRecommendation = true;
+    _recommendationError = null;
+    notifyListeners();
+
+    try {
+      // province/city → area_code/sigungu_code 변환
+      final codes = TravelApiService.getAreaCodes(province, city);
+      final areaCode = codes['area_code'];
+
+      if (areaCode == null) {
+        throw Exception('지원하지 않는 지역입니다: $province');
+      }
+
+      // API 호출
+      _recommendationResponse = await TravelApiService.getRecommendations(
+        query: query,
+        areaCode: areaCode,
+        sigunguCode: codes['sigungu_code'],
+      );
+
+      _isLoadingRecommendation = false;
+      notifyListeners();
+      return _recommendationResponse;
+    } catch (e) {
+      _isLoadingRecommendation = false;
+      _recommendationError = e.toString();
+      notifyListeners();
+      print('추천 API 에러: $e');
+      return null;
+    }
+  }
+
+  /// 추천 결과 초기화
+  void clearRecommendations() {
+    _recommendationResponse = null;
+    _recommendationError = null;
+    notifyListeners();
+  }
+
+  /// 추천 결과 직접 설정 (preloaded 데이터용)
+  void setRecommendationResponse(RecommendationResponse response) {
+    _recommendationResponse = response;
+    _recommendationError = null;
+    _isLoadingRecommendation = false;
     notifyListeners();
   }
 
