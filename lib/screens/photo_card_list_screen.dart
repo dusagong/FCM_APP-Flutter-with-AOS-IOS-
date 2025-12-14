@@ -32,7 +32,7 @@ class PhotoCardListScreen extends StatelessWidget {
           if (photoCards.isEmpty) {
             return EmptyState(
               icon: Icons.photo_camera_rounded,
-              title: '아직 레일필름가 없습니다',
+              title: '아직 레일필름이 없습니다',
               subtitle: '여정사진관에서 첫 레일필름를 만들어보세요!',
               actionLabel: '첫 레일필름 만들기',
               onAction: () {
@@ -113,6 +113,15 @@ class _PhotoCardGridItem extends StatelessWidget {
                       ? Image.file(
                           File(photoCard.imagePath!),
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                size: 40,
+                                color: AppColors.textTertiary.withValues(alpha: 0.5),
+                              ),
+                            );
+                          },
                         )
                       : Center(
                           child: Icon(

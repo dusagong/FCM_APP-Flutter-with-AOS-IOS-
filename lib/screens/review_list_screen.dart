@@ -203,7 +203,7 @@ class _ReviewImageTile extends StatelessWidget {
         File(imageUrl),
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => const Center(
-          child: Icon(Icons.image_rounded, color: AppColors.textTertiary),
+          child: Icon(Icons.image_not_supported_rounded, color: AppColors.textTertiary),
         ),
       );
     }
@@ -449,6 +449,14 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
         File(imageUrl),
         fit: BoxFit.cover,
         width: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: AppColors.surfaceVariant,
+            child: const Center(
+              child: Icon(Icons.broken_image_rounded, size: 48, color: AppColors.textTertiary),
+            ),
+          );
+        },
       );
     }
   }
@@ -457,7 +465,13 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
     if (imageUrl.startsWith('http')) {
       return Image.network(imageUrl, fit: BoxFit.cover);
     } else {
-      return Image.file(File(imageUrl), fit: BoxFit.cover);
+      return Image.file(
+        File(imageUrl),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(child: Icon(Icons.broken_image_rounded, size: 24, color: AppColors.textTertiary));
+        },
+      );
     }
   }
 }

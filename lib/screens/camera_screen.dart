@@ -401,10 +401,20 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppBorderRadius.xl),
-              child: Image.file(
+                child: Image.file(
                 File(_capturedImage!.path),
                 fit: BoxFit.cover,
                 width: double.infinity,
+                errorBuilder: (_, __, ___) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.broken_image_rounded, color: Colors.white, size: 48),
+                      const SizedBox(height: 8),
+                      Text('이미지 로드 실패', style: AppTypography.bodySmall.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ).animate().fadeIn(duration: 300.ms).scale(

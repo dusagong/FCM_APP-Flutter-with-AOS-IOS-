@@ -319,6 +319,11 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
                         child: Image.file(
                           File(_selectedImages[index].path),
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(Icons.broken_image_rounded, size: 24, color: Colors.grey),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -360,36 +365,87 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
           children: [
             const Icon(Icons.edit_note_rounded, color: AppColors.primary, size: 20),
             const SizedBox(width: 8),
-            Text('리뷰 내용', style: AppTypography.titleMedium),
+            Text('리뷰 작성', style: AppTypography.titleMedium), // Reverted back to explicit Review Write
             const SizedBox(width: 8),
             Text('(필수)', style: AppTypography.bodySmall.copyWith(color: AppColors.secondary)),
           ],
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _contentController,
-          maxLines: 6,
-          maxLength: 500,
-          decoration: InputDecoration(
-            hintText: '방문 후기를 작성해주세요...',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
+        Container(
+          height: 200, // Fixed height for diary look
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDF5), // Warm paper color
+            borderRadius: BorderRadius.circular(AppBorderRadius.md),
+            boxShadow: AppShadows.small,
+            border: Border.all(color: AppColors.border),
           ),
-          onChanged: (_) => setState(() {}),
+          child: Stack(
+            children: [
+              // Lined Paper Pattern
+              IgnorePointer(
+                child: CustomPaint(
+                  size: const Size(double.infinity, double.infinity),
+                  painter: _LinedPaperPainter(),
+                ),
+              ),
+              // Text Field
+              TextField(
+                controller: _contentController,
+                maxLines: null, // Allow unlimited lines
+                expands: true,
+                style: AppTypography.bodyMedium.copyWith(
+                  height: 1.8, // Match line height
+                  color: AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: '이곳에서의 추억을 기록해보세요...',
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textTertiary.withOpacity(0.5),
+                    height: 1.8,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
         ),
       ],
     ).animate().fadeIn(delay: 300.ms, duration: 300.ms);
   }
+}
+
+class _LinedPaperPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.border.withOpacity(0.5)
+      ..strokeWidth = 1;
+
+    // Line height must match TextField style height * fontSize
+    // Assuming bodyMedium size is 14 or 16. Let's say 16 * 1.8 = ~28.8
+    // We might need to tune this to match exact text alignment.
+    // Standard approach: just draw lines at regular intervals.
+    
+    double lineHeight = 28.0; // Approx match
+    double startY = 36.0; // Initial padding top
+    
+    while (startY < size.height) {
+      canvas.drawLine(Offset(20, startY), Offset(size.width - 20, startY), paint);
+      startY += lineHeight;
+    }
+    
+    // Vertical margin line (red)
+    final marginPaint = Paint()
+      ..color = Colors.red.withOpacity(0.1)
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(60, 0), Offset(60, size.height), marginPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -88,6 +88,14 @@ class PhotoCardWidget extends StatelessWidget {
                 ? Image.file(
                     File(photoCard.imagePath!),
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: Icon(Icons.broken_image_rounded, color: Colors.grey),
+                        ),
+                      );
+                    },
                   )
                 : CustomPaint(
                     painter: _PlaceholderPainter(),

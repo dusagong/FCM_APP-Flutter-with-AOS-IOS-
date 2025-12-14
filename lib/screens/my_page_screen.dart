@@ -39,42 +39,115 @@ class MyPageScreen extends StatelessWidget {
 
   Widget _buildStatsSection(AppProvider provider) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        boxShadow: AppShadows.small,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _StatItem(
-            icon: Icons.credit_card_rounded,
-            count: provider.photoCardCount,
-            label: '레일필름',
-            color: AppColors.primary,
-          ),
+          // Passport Header
           Container(
-            width: 1,
-            height: 40,
-            color: AppColors.border,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.public_rounded, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'TRAVELER PASSPORT',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'KOR-8282',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Colors.white,
+                      fontFamily: 'Monospace',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          _StatItem(
-            icon: Icons.local_offer_rounded,
-            count: provider.couponCount,
-            label: '쿠폰',
-            color: AppColors.secondary,
+          // ID Content
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                // Avatar Placeholder
+                Container(
+                  width: 80,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(Icons.person_rounded, size: 48, color: AppColors.textTertiary),
+                ),
+                const SizedBox(width: 24),
+                // Stats
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _StatItem(
+                        icon: Icons.credit_card_rounded,
+                        count: provider.photoCardCount,
+                        label: '레일필름',
+                        color: AppColors.primary,
+                      ),
+                      _StatItem(
+                        icon: Icons.local_offer_rounded,
+                        count: provider.couponCount,
+                        label: '쿠폰',
+                        color: AppColors.secondary,
+                      ),
+                      _StatItem(
+                        icon: Icons.star_rounded,
+                        count: provider.reviewCount,
+                        label: '리뷰',
+                        color: AppColors.accent,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
+          // Signature Line (Decorative)
           Container(
-            width: 1,
-            height: 40,
-            color: AppColors.border,
-          ),
-          _StatItem(
-            icon: Icons.star_rounded,
-            count: provider.reviewCount,
-            label: '리뷰',
-            color: AppColors.accent,
+             padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+             alignment: Alignment.centerRight,
+             child: Text(
+               'Traveler Signature',
+               style: TextStyle(
+                 fontFamily: 'Cursive', 
+                 fontSize: 14,
+                 color: AppColors.textTertiary.withOpacity(0.5),
+               ),
+             ),
           ),
         ],
       ),

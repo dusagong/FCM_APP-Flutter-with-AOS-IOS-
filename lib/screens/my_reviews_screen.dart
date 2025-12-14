@@ -176,7 +176,7 @@ class _ReviewGridItem extends StatelessWidget {
         height: double.infinity,
         errorBuilder: (_, __, ___) => Container(
           color: AppColors.surfaceVariant,
-          child: const Icon(Icons.image_rounded, color: AppColors.textTertiary),
+          child: const Icon(Icons.broken_image_rounded, color: AppColors.textTertiary),
         ),
       );
     }
@@ -328,7 +328,7 @@ class _ReviewDetailModal extends StatelessWidget {
         errorBuilder: (_, __, ___) => Container(
           color: AppColors.surfaceVariant,
           child: const Center(
-            child: Icon(Icons.image_rounded, color: AppColors.textTertiary, size: 48),
+            child: Icon(Icons.broken_image_rounded, color: AppColors.textTertiary, size: 48),
           ),
         ),
       );

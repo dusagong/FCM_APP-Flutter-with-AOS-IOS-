@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                '레일필름가 만남승강장의 티켓이 됩니다',
+                '레일필름이 만남승강장의 티켓이 됩니다',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
