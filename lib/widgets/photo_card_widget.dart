@@ -210,13 +210,27 @@ class PhotoCardWidget extends StatelessWidget {
   Widget _buildBack(BuildContext context) {
     return Stack(
       children: [
-        // Background Pattern
+        // Background Pattern (Lined Paper + Divider)
         Positioned.fill(
           child: CustomPaint(
-            painter: _BackgroundPatternPainter(),
+            painter: _PostcardBackgroundPainter(),
           ),
         ),
-        
+
+        // Watermark (Compass)
+        Positioned(
+          bottom: 20,
+          left: 20,
+          child: Opacity(
+            opacity: 0.1,
+            child: Icon(
+              Icons.explore_outlined,
+              size: 80,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+
         Column(
           children: [
             // Header (Rail Film Style)
@@ -397,22 +411,30 @@ class _PlaceholderPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _BackgroundPatternPainter extends CustomPainter {
+class _PostcardBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.03)
+    final linePaint = Paint()
+      ..color = AppColors.primary.withOpacity(0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
-    const spacing = 20.0;
-    for (var i = -size.height; i < size.width; i += spacing) {
+
+
+    // Horizontal Lines (Writing lines)
+    double startY = size.height * 0.25 - 30.0; // Added one more line at top
+    const lineHeight = 30.0;
+    
+    while (startY < size.height - 20) {
       canvas.drawLine(
-        Offset(i, size.height),
-        Offset(i + size.height, 0),
-        paint,
+        Offset(20, startY),
+        Offset(size.width - 20, startY),
+        linePaint,
       );
+      startY += lineHeight;
     }
+
+
   }
 
   @override
