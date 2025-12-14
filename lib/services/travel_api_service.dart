@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../models/recommendation.dart';
 
 class TravelApiService {
   static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080/api/v1';
@@ -137,7 +138,56 @@ class TravelApiService {
 
   /// 여행 추천 API
   /// area_code와 sigungu_code를 함께 전달하여 정확한 추천을 받음
-  static Future<Map<String, dynamic>> getRecommendations({
+  ///
+  /// 응답 구조:
+  /// - spots: 리스트 뷰용 (전체 검색 결과, 지도 좌표 포함)
+  /// - course: 코스 뷰용 (LLM이 큐레이션한 동선)
+  static Future<RecommendationResponse> getRecommendations({
+    required String query,
+    required String areaCode,
+    String? sigunguCode,
+  }) async {
+    try {
+      final url = '$baseUrl/ask';
+      final requestBody = {
+        'query': query,
+        'area_code': areaCode,
+        if (sigunguCode != null) 'sigungu_code': sigunguCode,
+      };
+
+      print('📤 [API REQUEST] POST $url');
+      print('📦 [REQUEST BODY] ${jsonEncode(requestBody)}');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+        body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(minutes: 3), // LLM 처리 시간 고려
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 추천 요청 시간 초과 (3분)');
+          throw Exception('추천 요청 시간 초과 (3분)');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 추천 완료: ${data['spots']?.length ?? 0}개 장소');
+        return RecommendationResponse.fromJson(data);
+      } else {
+        print('❌ [ERROR] 추천 요청 실패: ${response.statusCode}');
+        throw Exception('추천 요청 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 추천 요청 에러: $e');
+      throw Exception('추천 요청 에러: $e');
+    }
+  }
+
+  /// 여행 추천 API (Raw Map 반환 - 하위 호환용)
+  static Future<Map<String, dynamic>> getRecommendationsRaw({
     required String query,
     required String areaCode,
     String? sigunguCode,
@@ -152,7 +202,7 @@ class TravelApiService {
           if (sigunguCode != null) 'sigungu_code': sigunguCode,
         }),
       ).timeout(
-        const Duration(minutes: 3), // LLM 처리 시간 고려
+        const Duration(minutes: 3),
         onTimeout: () {
           throw Exception('추천 요청 시간 초과 (3분)');
         },
