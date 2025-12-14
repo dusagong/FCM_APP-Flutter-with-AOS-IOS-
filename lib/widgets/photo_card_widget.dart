@@ -278,8 +278,8 @@ class PhotoCardWidget extends StatelessWidget {
                       photoCard.aiQuote,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        height: 1.5,
-                        fontStyle: FontStyle.italic,
+                        height: 1.6,
+                        fontFamily: 'Courier', // Typewriter style
                         color: Colors.black87,
                         fontWeight: FontWeight.w500,
                       ),
@@ -298,22 +298,51 @@ class PhotoCardWidget extends StatelessWidget {
               ),
             ),
 
-            // Route Info
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildRouteItem('FROM', photoCard.destination.split(' ').first),
-                  Icon(Icons.arrow_right_alt_rounded, color: Colors.black26),
-                  _buildRouteItem('TO', photoCard.city),
-                ],
+            // Destination Stamp
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 24, bottom: 24),
+                child: Transform.rotate(
+                  angle: -0.2, // Slight tilt
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.primary.withOpacity(0.5), width: 3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'DESTINATION',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.primary.withOpacity(0.6),
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          photoCard.city.toUpperCase(),
+                          style: AppTypography.headlineSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          photoCard.formattedDate,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.primary.withOpacity(0.6),
+                            fontFamily: 'Monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
 
@@ -349,26 +378,7 @@ class PhotoCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRouteItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: Colors.black45,
-            fontSize: 10,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: AppTypography.titleSmall.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
+
 }
 
 class _PlaceholderPainter extends CustomPainter {
