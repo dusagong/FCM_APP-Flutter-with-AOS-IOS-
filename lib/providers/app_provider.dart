@@ -27,6 +27,11 @@ class AppProvider extends ChangeNotifier {
   String? _currentProvince;
   String? _currentCity;
 
+  // 추천 API 결과
+  RecommendationResponse? _recommendationResponse;
+  bool _isLoadingRecommendation = false;
+  String? _recommendationError;
+
   // Getters
   List<PhotoCard> get photoCards => _photoCards;
   PhotoCard? get currentPhotoCard => _currentPhotoCard;
@@ -40,6 +45,13 @@ class AppProvider extends ChangeNotifier {
       _reviewablePlaces.where((r) => !r.hasReviewed).toList();
   String? get currentProvince => _currentProvince;
   String? get currentCity => _currentCity;
+
+  // 추천 API 결과 Getters
+  RecommendationResponse? get recommendationResponse => _recommendationResponse;
+  bool get isLoadingRecommendation => _isLoadingRecommendation;
+  String? get recommendationError => _recommendationError;
+  List<SpotWithLocation> get recommendedSpots => _recommendationResponse?.spots ?? [];
+  RecommendedCourse? get recommendedCourse => _recommendationResponse?.course;
 
   // Stats
   int get photoCardCount => _photoCards.length;
@@ -190,6 +202,54 @@ class AppProvider extends ChangeNotifier {
     _currentPhotoCard = null;
     _currentProvince = null;
     _currentCity = null;
+    notifyListeners();
+  }
+
+  // 추천 API Methods
+
+  /// 여행 추천 API 호출
+  /// PhotoCard의 지역 정보 + 사용자 쿼리로 추천 요청
+  Future<RecommendationResponse?> fetchRecommendations({
+    required String query,
+    required String province,
+    required String city,
+  }) async {
+    _isLoadingRecommendation = true;
+    _recommendationError = null;
+    notifyListeners();
+
+    try {
+      // province/city → area_code/sigungu_code 변환
+      final codes = TravelApiService.getAreaCodes(province, city);
+      final areaCode = codes['area_code'];
+
+      if (areaCode == null) {
+        throw Exception('지원하지 않는 지역입니다: $province');
+      }
+
+      // API 호출
+      _recommendationResponse = await TravelApiService.getRecommendations(
+        query: query,
+        areaCode: areaCode,
+        sigunguCode: codes['sigungu_code'],
+      );
+
+      _isLoadingRecommendation = false;
+      notifyListeners();
+      return _recommendationResponse;
+    } catch (e) {
+      _isLoadingRecommendation = false;
+      _recommendationError = e.toString();
+      notifyListeners();
+      print('추천 API 에러: $e');
+      return null;
+    }
+  }
+
+  /// 추천 결과 초기화
+  void clearRecommendations() {
+    _recommendationResponse = null;
+    _recommendationError = null;
     notifyListeners();
   }
 

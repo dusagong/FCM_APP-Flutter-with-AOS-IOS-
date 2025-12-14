@@ -163,10 +163,10 @@ class TravelApiService {
         headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: jsonEncode(requestBody),
       ).timeout(
-        const Duration(minutes: 3), // LLM 처리 시간 고려
+        const Duration(minutes: 5), // LLM + MCP 처리 시간 고려
         onTimeout: () {
-          print('⏱️ [TIMEOUT] 추천 요청 시간 초과 (3분)');
-          throw Exception('추천 요청 시간 초과 (3분)');
+          print('⏱️ [TIMEOUT] 추천 요청 시간 초과 (5분)');
+          throw Exception('추천 요청 시간 초과 (5분)');
         },
       );
 
@@ -202,9 +202,9 @@ class TravelApiService {
           if (sigunguCode != null) 'sigungu_code': sigunguCode,
         }),
       ).timeout(
-        const Duration(minutes: 3),
+        const Duration(minutes: 5),
         onTimeout: () {
-          throw Exception('추천 요청 시간 초과 (3분)');
+          throw Exception('추천 요청 시간 초과 (5분)');
         },
       );
 

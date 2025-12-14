@@ -114,7 +114,7 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
   }
 }
 
-// Course View - Time-based courses
+// Course View - API 추천 코스 사용
 class _CourseView extends StatelessWidget {
   final PhotoCard photoCard;
 
@@ -124,30 +124,300 @@ class _CourseView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
-        final courses = provider.generateCourses(
-          photoCard.province,
-          photoCard.city,
-        );
+        final course = provider.recommendedCourse;
 
-        if (courses.isEmpty) {
+        if (course == null || course.stops.isEmpty) {
           return const EmptyState(
             icon: Icons.map_rounded,
             title: '추천 코스가 없습니다',
-            subtitle: '해당 지역의 장소 정보가 준비 중입니다',
+            subtitle: 'AI가 코스를 준비하지 못했습니다',
           );
         }
 
-        return ListView.builder(
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          itemCount: courses.length,
-          itemBuilder: (context, index) {
-            return _CourseCard(
-              course: courses[index],
-              index: index,
-            );
-          },
+          child: _RecommendedCourseCard(course: course),
         );
       },
+    );
+  }
+}
+
+/// API 응답의 RecommendedCourse를 표시하는 카드
+class _RecommendedCourseCard extends StatelessWidget {
+  final RecommendedCourse course;
+
+  const _RecommendedCourseCard({required this.course});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+        boxShadow: AppShadows.small,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.primaryGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppBorderRadius.lg),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.route_rounded, color: Colors.white, size: 24),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        course.title,
+                        style: AppTypography.titleLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (course.totalDuration != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded, color: Colors.white70, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        course.totalDuration!,
+                        style: AppTypography.bodySmall.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Summary
+          if (course.summary != null)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                course.summary!,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          // Stops
+          ...course.stops.asMap().entries.map((entry) {
+            final index = entry.key;
+            final stop = entry.value;
+            return _CourseStopItem(
+              stop: stop,
+              isLast: index == course.stops.length - 1,
+            );
+          }),
+          const SizedBox(height: 16),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+  }
+}
+
+/// 코스의 각 정차지 아이템
+class _CourseStopItem extends StatelessWidget {
+  final CourseStop stop;
+  final bool isLast;
+
+  const _CourseStopItem({
+    required this.stop,
+    this.isLast = false,
+  });
+
+  String _getCategoryEmoji(String? category) {
+    switch (category) {
+      case '카페':
+        return '☕';
+      case '음식점':
+        return '🍽️';
+      case '관광지':
+        return '🏞️';
+      case '숙박':
+        return '🏨';
+      case '문화시설':
+        return '🏛️';
+      default:
+        return '📍';
+    }
+  }
+
+  Color _getCategoryColor(String? category) {
+    switch (category) {
+      case '카페':
+        return AppColors.cafe;
+      case '음식점':
+        return AppColors.restaurant;
+      case '관광지':
+        return AppColors.tourism;
+      case '숙박':
+        return AppColors.accentTeal;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Timeline
+          Column(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _getCategoryColor(stop.category),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '${stop.order}',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              if (!isLast)
+                Container(
+                  width: 2,
+                  height: 100,
+                  color: AppColors.border,
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // Content
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Category & Time
+                  Row(
+                    children: [
+                      CategoryBadge(
+                        label: stop.category ?? '장소',
+                        color: _getCategoryColor(stop.category),
+                        emoji: _getCategoryEmoji(stop.category),
+                      ),
+                      const Spacer(),
+                      if (stop.time != null)
+                        Text(
+                          stop.time!,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Name
+                  Text(
+                    stop.name,
+                    style: AppTypography.titleMedium,
+                  ),
+                  // Address
+                  if (stop.address != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      stop.address!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                  // Duration
+                  if (stop.duration != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.timer_outlined, size: 14, color: AppColors.textTertiary),
+                        const SizedBox(width: 4),
+                        Text(
+                          stop.duration!,
+                          style: AppTypography.labelSmall,
+                        ),
+                      ],
+                    ),
+                  ],
+                  // Reason (추천 이유)
+                  if (stop.reason != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.favorite_rounded, size: 14, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              stop.reason!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  // Tip
+                  if (stop.tip != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.lightbulb_outline_rounded, size: 14, color: AppColors.warning),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            stop.tip!,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -526,7 +796,7 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// All Places View
+// All Places View - API 추천 장소 사용
 class _AllPlacesView extends StatelessWidget {
   final PhotoCard photoCard;
 
@@ -536,25 +806,22 @@ class _AllPlacesView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
-        final places = provider.getPlacesByDestination(
-          photoCard.province,
-          photoCard.city,
-        );
+        final spots = provider.recommendedSpots;
 
-        if (places.isEmpty) {
+        if (spots.isEmpty) {
           return const EmptyState(
             icon: Icons.store_rounded,
-            title: '등록된 장소가 없습니다',
-            subtitle: '해당 지역의 장소 정보가 준비 중입니다',
+            title: '추천 장소가 없습니다',
+            subtitle: 'AI가 장소를 찾지 못했습니다',
           );
         }
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: places.length,
+          itemCount: spots.length,
           itemBuilder: (context, index) {
-            return _PlaceCard(
-              place: places[index],
+            return _SpotCard(
+              spot: spots[index],
               index: index,
             );
           },
@@ -564,14 +831,55 @@ class _AllPlacesView extends StatelessWidget {
   }
 }
 
-class _PlaceCard extends StatelessWidget {
-  final Place place;
+/// API 응답의 SpotWithLocation을 표시하는 카드
+class _SpotCard extends StatelessWidget {
+  final SpotWithLocation spot;
   final int index;
 
-  const _PlaceCard({
-    required this.place,
+  const _SpotCard({
+    required this.spot,
     required this.index,
   });
+
+  String _getCategoryEmoji(String? category) {
+    switch (category) {
+      case '카페':
+        return '☕';
+      case '음식점':
+        return '🍽️';
+      case '관광지':
+        return '🏞️';
+      case '숙박':
+        return '🏨';
+      case '문화시설':
+        return '🏛️';
+      case '축제/행사':
+        return '🎉';
+      case '레포츠':
+        return '🏄';
+      case '쇼핑':
+        return '🛍️';
+      default:
+        return '📍';
+    }
+  }
+
+  Color _getCategoryColor(String? category) {
+    switch (category) {
+      case '카페':
+        return AppColors.cafe;
+      case '음식점':
+        return AppColors.restaurant;
+      case '관광지':
+        return AppColors.tourism;
+      case '숙박':
+        return AppColors.accentTeal;
+      case '문화시설':
+        return AppColors.culture;
+      default:
+        return AppColors.primary;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -585,29 +893,30 @@ class _PlaceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Container(
-            height: 160,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(AppBorderRadius.lg),
+          // Image (이미지가 있는 경우에만)
+          if (spot.imageUrl != null && spot.imageUrl!.isNotEmpty)
+            Container(
+              height: 160,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppBorderRadius.lg),
+                ),
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(AppBorderRadius.lg),
-              ),
-              child: Image.network(
-                place.imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (_, __, ___) => const Center(
-                  child: Icon(Icons.image_rounded, size: 48, color: AppColors.textTertiary),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppBorderRadius.lg),
+                ),
+                child: Image.network(
+                  spot.imageUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (_, __, ___) => const Center(
+                    child: Icon(Icons.image_rounded, size: 48, color: AppColors.textTertiary),
+                  ),
                 ),
               ),
             ),
-          ),
           // Content
           Padding(
             padding: const EdgeInsets.all(16),
@@ -616,40 +925,73 @@ class _PlaceCard extends StatelessWidget {
               children: [
                 // Category
                 CategoryBadge(
-                  label: place.category.label,
-                  color: _getCategoryColor(place.category),
-                  emoji: place.category.emoji,
+                  label: spot.category ?? '장소',
+                  color: _getCategoryColor(spot.category),
+                  emoji: _getCategoryEmoji(spot.category),
                 ),
                 const SizedBox(height: 8),
                 // Name
-                Text(place.name, style: AppTypography.titleLarge),
-                const SizedBox(height: 4),
-                // Rating
-                Row(
-                  children: [
-                    RatingStars(rating: place.rating, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${place.rating}',
-                      style: AppTypography.labelMedium.copyWith(
-                        fontWeight: FontWeight.w600,
+                Text(spot.name, style: AppTypography.titleLarge),
+                // Address
+                if (spot.address != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          spot.address!,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                    ],
+                  ),
+                ],
+                // Tel
+                if (spot.tel != null && spot.tel!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        spot.tel!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                // Location indicator (좌표가 있는 경우)
+                if (spot.hasLocation) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppBorderRadius.sm),
                     ),
-                    Text(
-                      ' (${place.reviewCount}개 리뷰)',
-                      style: AppTypography.bodySmall,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.map_outlined, size: 12, color: AppColors.success),
+                        const SizedBox(width: 4),
+                        Text(
+                          '지도에서 보기 가능',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Description
-                Text(
-                  place.description,
-                  style: AppTypography.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                // Actions
-                _PlaceActionButtons(place: place),
+                  ),
+                ],
               ],
             ),
           ),
@@ -660,22 +1002,9 @@ class _PlaceCard extends StatelessWidget {
           duration: 300.ms,
         ).slideY(begin: 0.1, end: 0);
   }
-
-  Color _getCategoryColor(PlaceCategory category) {
-    switch (category) {
-      case PlaceCategory.cafe:
-        return AppColors.cafe;
-      case PlaceCategory.restaurant:
-        return AppColors.restaurant;
-      case PlaceCategory.tourism:
-        return AppColors.tourism;
-      case PlaceCategory.culture:
-        return AppColors.culture;
-    }
-  }
 }
 
-// Map View with NaverMap
+// Map View with NaverMap - API 추천 장소 사용
 class _MapView extends StatefulWidget {
   final PhotoCard photoCard;
 
@@ -694,44 +1023,66 @@ class _MapViewState extends State<_MapView> {
     super.dispose();
   }
 
-  NLatLng _getInitialPosition(List<Place> places) {
+  NLatLng _getInitialPosition(List<SpotWithLocation> spots) {
     // 장소 목록에서 좌표가 있는 첫 번째 장소의 위치를 기준으로 함
-    for (final place in places) {
-      if (place.latitude != null && place.longitude != null) {
-        return NLatLng(place.latitude!, place.longitude!);
+    for (final spot in spots) {
+      if (spot.hasLocation) {
+        return NLatLng(spot.latitude!, spot.longitude!);
       }
     }
     // 기본값: 강릉시 중심
     return const NLatLng(37.7519, 128.8760);
   }
 
-  Color _getCategoryColor(PlaceCategory category) {
+  Color _getCategoryColor(String? category) {
     switch (category) {
-      case PlaceCategory.cafe:
+      case '카페':
         return AppColors.cafe;
-      case PlaceCategory.restaurant:
+      case '음식점':
         return AppColors.restaurant;
-      case PlaceCategory.tourism:
+      case '관광지':
         return AppColors.tourism;
-      case PlaceCategory.culture:
+      case '숙박':
+        return AppColors.accentTeal;
+      case '문화시설':
         return AppColors.culture;
+      default:
+        return AppColors.primary;
     }
   }
 
-  void _addMarkers(List<Place> places) async {
+  String _getCategoryEmoji(String? category) {
+    switch (category) {
+      case '카페':
+        return '☕';
+      case '음식점':
+        return '🍽️';
+      case '관광지':
+        return '🏞️';
+      case '숙박':
+        return '🏨';
+      case '문화시설':
+        return '🏛️';
+      default:
+        return '📍';
+    }
+  }
+
+  void _addMarkers(List<SpotWithLocation> spots) async {
     if (_mapController == null) return;
 
     final markers = <NMarker>[];
 
-    for (final place in places) {
-      if (place.latitude != null && place.longitude != null) {
+    for (int i = 0; i < spots.length; i++) {
+      final spot = spots[i];
+      if (spot.hasLocation) {
         final marker = NMarker(
-          id: place.id,
-          position: NLatLng(place.latitude!, place.longitude!),
+          id: spot.contentId ?? 'spot_$i',
+          position: NLatLng(spot.latitude!, spot.longitude!),
         );
 
         marker.setOnTapListener((overlay) {
-          _showPlaceBottomSheet(context, place);
+          _showSpotBottomSheet(context, spot);
         });
 
         markers.add(marker);
@@ -741,7 +1092,7 @@ class _MapViewState extends State<_MapView> {
     await _mapController!.addOverlayAll(markers.toSet());
   }
 
-  void _showPlaceBottomSheet(BuildContext context, Place place) {
+  void _showSpotBottomSheet(BuildContext context, SpotWithLocation spot) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -758,24 +1109,44 @@ class _MapViewState extends State<_MapView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CategoryBadge(
-              label: place.category.label,
-              color: _getCategoryColor(place.category),
-              emoji: place.category.emoji,
+              label: spot.category ?? '장소',
+              color: _getCategoryColor(spot.category),
+              emoji: _getCategoryEmoji(spot.category),
             ),
             const SizedBox(height: 8),
-            Text(place.name, style: AppTypography.headlineSmall),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                RatingStars(rating: place.rating, size: 16),
-                const SizedBox(width: 8),
-                Text('${place.rating} (${place.reviewCount}개 리뷰)'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(place.description, style: AppTypography.bodyMedium),
-            const SizedBox(height: 16),
-            _PlaceActionButtons(place: place),
+            Text(spot.name, style: AppTypography.headlineSmall),
+            if (spot.address != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      spot.address!,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (spot.tel != null && spot.tel!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.phone_outlined, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    spot.tel!,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 20),
           ],
         ),
@@ -787,16 +1158,11 @@ class _MapViewState extends State<_MapView> {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
-        final places = provider.getPlacesByDestination(
-          widget.photoCard.province,
-          widget.photoCard.city,
-        );
+        final spots = provider.recommendedSpots;
 
-        final placesWithCoords = places.where(
-          (p) => p.latitude != null && p.longitude != null
-        ).toList();
+        final spotsWithCoords = spots.where((s) => s.hasLocation).toList();
 
-        if (placesWithCoords.isEmpty) {
+        if (spotsWithCoords.isEmpty) {
           return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -823,7 +1189,7 @@ class _MapViewState extends State<_MapView> {
             NaverMap(
               options: NaverMapViewOptions(
                 initialCameraPosition: NCameraPosition(
-                  target: _getInitialPosition(placesWithCoords),
+                  target: _getInitialPosition(spotsWithCoords),
                   zoom: 12,
                 ),
                 mapType: NMapType.basic,
@@ -839,7 +1205,7 @@ class _MapViewState extends State<_MapView> {
               ),
               onMapReady: (controller) {
                 _mapController = controller;
-                _addMarkers(placesWithCoords);
+                _addMarkers(spotsWithCoords);
               },
             ),
             // 장소 개수 표시
@@ -859,7 +1225,7 @@ class _MapViewState extends State<_MapView> {
                     const Icon(Icons.place_rounded, color: AppColors.primary, size: 18),
                     const SizedBox(width: 6),
                     Text(
-                      '${placesWithCoords.length}개 장소',
+                      '${spotsWithCoords.length}개 장소',
                       style: AppTypography.labelMedium.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -873,17 +1239,17 @@ class _MapViewState extends State<_MapView> {
               bottom: 24,
               left: 16,
               right: 16,
-              child: _PlaceListChips(
-                places: placesWithCoords,
-                onPlaceTap: (place) {
-                  if (_mapController != null && place.latitude != null && place.longitude != null) {
+              child: _SpotListChips(
+                spots: spotsWithCoords,
+                onSpotTap: (spot) {
+                  if (_mapController != null && spot.hasLocation) {
                     _mapController!.updateCamera(
                       NCameraUpdate.withParams(
-                        target: NLatLng(place.latitude!, place.longitude!),
+                        target: NLatLng(spot.latitude!, spot.longitude!),
                         zoom: 15,
                       ),
                     );
-                    _showPlaceBottomSheet(context, place);
+                    _showSpotBottomSheet(context, spot);
                   }
                 },
               ),
@@ -895,25 +1261,47 @@ class _MapViewState extends State<_MapView> {
   }
 }
 
-class _PlaceListChips extends StatelessWidget {
-  final List<Place> places;
-  final Function(Place) onPlaceTap;
+/// API 응답 SpotWithLocation용 하단 칩 목록
+class _SpotListChips extends StatelessWidget {
+  final List<SpotWithLocation> spots;
+  final Function(SpotWithLocation) onSpotTap;
 
-  const _PlaceListChips({
-    required this.places,
-    required this.onPlaceTap,
+  const _SpotListChips({
+    required this.spots,
+    required this.onSpotTap,
   });
 
-  Color _getCategoryColor(PlaceCategory category) {
+  Color _getCategoryColor(String? category) {
     switch (category) {
-      case PlaceCategory.cafe:
+      case '카페':
         return AppColors.cafe;
-      case PlaceCategory.restaurant:
+      case '음식점':
         return AppColors.restaurant;
-      case PlaceCategory.tourism:
+      case '관광지':
         return AppColors.tourism;
-      case PlaceCategory.culture:
+      case '숙박':
+        return AppColors.accentTeal;
+      case '문화시설':
         return AppColors.culture;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  String _getCategoryEmoji(String? category) {
+    switch (category) {
+      case '카페':
+        return '☕';
+      case '음식점':
+        return '🍽️';
+      case '관광지':
+        return '🏞️';
+      case '숙박':
+        return '🏨';
+      case '문화시설':
+        return '🏛️';
+      default:
+        return '📍';
     }
   }
 
@@ -923,20 +1311,20 @@ class _PlaceListChips extends StatelessWidget {
       height: 44,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: places.length,
+        itemCount: spots.length,
         itemBuilder: (context, index) {
-          final place = places[index];
+          final spot = spots[index];
           return GestureDetector(
-            onTap: () => onPlaceTap(place),
+            onTap: () => onSpotTap(spot),
             child: Container(
-              margin: EdgeInsets.only(right: index < places.length - 1 ? 8 : 0),
+              margin: EdgeInsets.only(right: index < spots.length - 1 ? 8 : 0),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppBorderRadius.full),
                 boxShadow: AppShadows.small,
                 border: Border.all(
-                  color: _getCategoryColor(place.category).withValues(alpha: 0.3),
+                  color: _getCategoryColor(spot.category).withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -944,12 +1332,12 @@ class _PlaceListChips extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    place.category.emoji,
+                    _getCategoryEmoji(spot.category),
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    place.name,
+                    spot.name,
                     style: AppTypography.labelSmall.copyWith(
                       fontWeight: FontWeight.w600,
                     ),

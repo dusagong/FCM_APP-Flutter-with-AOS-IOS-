@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
+import '../providers/app_provider.dart';
 import 'meeting_platform_screen.dart';
 
 class MeetingPlatformLoadingScreen extends StatefulWidget {
@@ -20,29 +22,59 @@ class MeetingPlatformLoadingScreen extends StatefulWidget {
 class _MeetingPlatformLoadingScreenState
     extends State<MeetingPlatformLoadingScreen> {
   int _currentStep = 0;
+  bool _hasError = false;
+  bool _apiCompleted = false;
+  RecommendationResponse? _apiResult;
+
   final List<String> _loadingMessages = [
-    '개인화 데이트 코스를 추천해 드릴게요',
-    '맞춤형 쿠폰을 불러오고 있어요',
-    '특별한 장소들을 준비하고 있어요',
+    'AI가 여행 코스를 분석하고 있어요',
+    '커플에게 딱 맞는 장소를 찾고 있어요',
+    '특별한 데이트 코스를 준비하고 있어요',
+    '맛집과 카페를 찾고 있어요',
+    '동선을 최적화하고 있어요',
     '거의 다 됐어요!',
   ];
 
   @override
   void initState() {
     super.initState();
-    _startLoading();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startLoading();
+    });
   }
 
   Future<void> _startLoading() async {
-    for (int i = 0; i < _loadingMessages.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    final provider = Provider.of<AppProvider>(context, listen: false);
+
+    // 기본 쿼리 생성 (해시태그 기반)
+    final query = _buildQueryFromPhotoCard(widget.photoCard);
+
+    // 1. API 호출 시작 (백그라운드)
+    _fetchRecommendations(provider, query);
+
+    // 2. 로딩 애니메이션 반복 (API 완료될 때까지)
+    await _runLoadingAnimation();
+
+    // 3. API 결과 처리
+    if (!mounted) return;
+
+    if (_apiResult == null || !_apiResult!.success) {
+      setState(() => _hasError = true);
+      await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
-        setState(() => _currentStep = i);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.recommendationError ?? '추천 정보를 불러오지 못했습니다'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pop(context);
       }
+      return;
     }
 
-    await Future.delayed(const Duration(milliseconds: 500));
-
+    // 성공 시 화면 전환
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -50,6 +82,40 @@ class _MeetingPlatformLoadingScreenState
           builder: (_) => MeetingPlatformScreen(photoCard: widget.photoCard),
         ),
       );
+    }
+  }
+
+  /// API 호출 (백그라운드)
+  Future<void> _fetchRecommendations(AppProvider provider, String query) async {
+    _apiResult = await provider.fetchRecommendations(
+      query: query,
+      province: widget.photoCard.province,
+      city: widget.photoCard.city,
+    );
+    _apiCompleted = true;
+  }
+
+  /// 로딩 애니메이션 (API 완료될 때까지 반복)
+  Future<void> _runLoadingAnimation() async {
+    int step = 0;
+    while (!_apiCompleted && mounted) {
+      setState(() => _currentStep = step % _loadingMessages.length);
+      await Future.delayed(const Duration(milliseconds: 2000));
+      step++;
+    }
+  }
+
+  /// PhotoCard 정보로 추천 쿼리 생성
+  String _buildQueryFromPhotoCard(PhotoCard photoCard) {
+    final hashtags = photoCard.hashtags.join(' ');
+    final message = photoCard.message;
+
+    if (message.isNotEmpty) {
+      return '$message $hashtags';
+    } else if (hashtags.isNotEmpty) {
+      return '${photoCard.city}에서 $hashtags 관련 데이트 코스 추천해줘';
+    } else {
+      return '${photoCard.city}에서 커플 데이트 코스 추천해줘';
     }
   }
 
