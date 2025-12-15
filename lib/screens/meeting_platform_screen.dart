@@ -1685,13 +1685,20 @@ class _MapViewState extends State<_MapView> {
     }
   }
 
-  void _addMarkers(List<SpotWithLocation> spots) async {
+  void _addMarkers(List<SpotWithLocation> spots, {RecommendedCourse? course}) async {
     if (_mapController == null) return;
+
+    // 코스에 포함된 장소 이름 목록 (제외 대상)
+    final courseStopNames = course?.stops.map((s) => s.name).toSet() ?? <String>{};
 
     final markers = <NMarker>[];
 
     for (int i = 0; i < spots.length; i++) {
       final spot = spots[i];
+
+      // 코스에 포함된 장소는 스킵 (코스 마커로 대체됨)
+      if (courseStopNames.contains(spot.name)) continue;
+
       if (spot.hasLocation) {
         final marker = NMarker(
           id: spot.contentId ?? 'spot_$i',
@@ -1726,12 +1733,12 @@ class _MapViewState extends State<_MapView> {
         .map((stop) => NLatLng(stop.latitude!, stop.longitude!))
         .toList();
 
-    // 점선 경로 (#9bfa6c보다 진한 초록색)
-    const routeColor = Color(0xFF5BD936);
+    // 점선 경로 (파란색으로 통일)
+    const blueColor = Color(0xFF2196F3);
     final polyline = NPolylineOverlay(
       id: 'course_route',
       coords: coords,
-      color: routeColor,
+      color: blueColor,
       width: 4,
       lineCap: NLineCap.round,
       lineJoin: NLineJoin.round,
@@ -1739,18 +1746,54 @@ class _MapViewState extends State<_MapView> {
     );
     await _mapController!.addOverlay(polyline);
 
-    // 코스 마커 추가
+    // 코스 마커 추가 (파란색으로 구분)
     final courseMarkers = <NMarker>[];
+
     for (int i = 0; i < stopsWithLocation.length; i++) {
+      if (!mounted) return;
       final stop = stopsWithLocation[i];
+
+      // 보라색 마커 아이콘 생성
+      final icon = await NOverlayImage.fromWidget(
+        widget: Container(
+          width: 36,
+          height: 36,
+          decoration: const BoxDecoration(
+            color: blueColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              '${stop.order}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        size: const Size(36, 36),
+        context: context,
+      );
+
+      if (!mounted) return;
 
       final marker = NMarker(
         id: 'course_${stop.order}',
         position: NLatLng(stop.latitude!, stop.longitude!),
+        icon: icon,
         caption: NOverlayCaption(
-          text: '${stop.order}. ${stop.name}',
+          text: stop.name,
           textSize: 12,
-          color: AppColors.textPrimary,
+          color: blueColor,
           haloColor: Colors.white,
         ),
       );
@@ -1762,6 +1805,7 @@ class _MapViewState extends State<_MapView> {
       courseMarkers.add(marker);
     }
 
+    if (!mounted) return;
     await _mapController!.addOverlayAll(courseMarkers.toSet());
   }
 
@@ -1983,9 +2027,10 @@ class _MapViewState extends State<_MapView> {
               ),
               onMapReady: (controller) {
                 _mapController = controller;
-                _addMarkers(spotsWithCoords);
-                // 코스 경로선 추가
+                // 코스 경로선 및 마커 추가 (먼저 추가해야 일반 마커에서 제외 가능)
                 _addCourseRoute(provider.recommendedCourse);
+                // 일반 마커 추가 (코스 장소 제외)
+                _addMarkers(spotsWithCoords, course: provider.recommendedCourse);
               },
             ),
             // 장소 개수 표시
