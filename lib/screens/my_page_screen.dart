@@ -7,6 +7,7 @@ import '../widgets/common_widgets.dart';
 import 'photo_card_list_screen.dart';
 import 'coupon_screen.dart';
 import 'reviewable_places_screen.dart';
+import 'stamp_screen.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'my_reviews_screen.dart';
@@ -323,6 +324,18 @@ class MyPageScreen extends StatelessWidget {
         ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
         const SizedBox(height: 12),
         _MenuItem(
+          icon: Icons.approval_rounded,
+          title: '스탬프 컬렉션',
+          color: const Color(0xFF9C27B0),  // 보라색 - 스탬프
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StampScreen()),
+            );
+          },
+        ).animate().fadeIn(delay: 250.ms, duration: 300.ms),
+        const SizedBox(height: 12),
+        _MenuItem(
           icon: Icons.local_offer_rounded,
           title: '쿠폰함',
           color: AppColors.secondary,  // 녹색 - 혜택
@@ -332,7 +345,7 @@ class MyPageScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const CouponScreen()),
             );
           },
-        ).animate().fadeIn(delay: 250.ms, duration: 300.ms),
+        ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
         const SizedBox(height: 12),
         _MenuItem(
           icon: Icons.rate_review_rounded,
@@ -344,7 +357,7 @@ class MyPageScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const MyReviewsScreen()),
             );
           },
-        ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
+        ).animate().fadeIn(delay: 350.ms, duration: 300.ms),
         const SizedBox(height: 12),
         _MenuItem(
           icon: Icons.edit_note_rounded,
@@ -356,7 +369,7 @@ class MyPageScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const ReviewablePlacesScreen()),
             );
           },
-        ).animate().fadeIn(delay: 350.ms, duration: 300.ms),
+        ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
       ],
     );
   }

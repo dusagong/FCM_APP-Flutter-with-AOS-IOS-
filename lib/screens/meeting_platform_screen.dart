@@ -48,10 +48,22 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    // preloadedResponse가 있으면 Provider에 설정
+    // preloadedResponse가 있으면 Provider에 설정하고 스탬프 생성
     if (widget.preloadedResponse != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<AppProvider>().setRecommendationResponse(widget.preloadedResponse!);
+        final provider = context.read<AppProvider>();
+        provider.setRecommendationResponse(widget.preloadedResponse!);
+
+        // 코스가 있으면 스탬프 자동 생성
+        final course = widget.preloadedResponse!.course;
+        if (course != null) {
+          provider.createCourseStamp(
+            photoCardId: widget.photoCard.id,
+            course: course,
+            province: widget.photoCard.province,
+            city: widget.photoCard.city,
+          );
+        }
       });
     }
   }
@@ -629,6 +641,95 @@ class _CourseStopActionButtons extends StatelessWidget {
     );
   }
 
+  void _showStampEarnedModal(BuildContext context, String placeName) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.approval_rounded,
+                  color: Color(0xFF9C27B0),
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '스탬프가 적립되었습니다!',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: const Color(0xFF9C27B0),
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on_rounded, color: Color(0xFF9C27B0), size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        placeName,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: const Color(0xFF9C27B0),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '리뷰 작성 완료!',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9C27B0),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('확인'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
@@ -650,6 +751,7 @@ class _CourseStopActionButtons extends StatelessWidget {
                     ? null
                     : () {
                         provider.addCouponByName(stop.name, stop.category ?? '장소');
+                        provider.updateStampCouponProgress(stop.name);
                         _showCouponReceivedModal(context, stop.name);
                       },
               )
@@ -658,8 +760,8 @@ class _CourseStopActionButtons extends StatelessWidget {
                 label: '리뷰작성',
                 icon: Icons.edit_outlined,
                 isPrimary: true,
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final result = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ReviewWriteScreen(
@@ -668,6 +770,10 @@ class _CourseStopActionButtons extends StatelessWidget {
                       ),
                     ),
                   );
+                  if (result == true && context.mounted) {
+                    context.read<AppProvider>().updateStampReviewProgress(stop.name);
+                    _showStampEarnedModal(context, stop.name);
+                  }
                 },
               ),
             const SizedBox(width: 8),
@@ -1513,6 +1619,95 @@ class _SpotActionButtons extends StatelessWidget {
     );
   }
 
+  void _showStampEarnedModal(BuildContext context, String placeName) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.approval_rounded,
+                  color: Color(0xFF9C27B0),
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '스탬프가 적립되었습니다!',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: const Color(0xFF9C27B0),
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9C27B0).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on_rounded, color: Color(0xFF9C27B0), size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        placeName,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: const Color(0xFF9C27B0),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '리뷰 작성 완료!',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9C27B0),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppBorderRadius.md),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('확인'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
@@ -1534,6 +1729,7 @@ class _SpotActionButtons extends StatelessWidget {
                     ? null
                     : () {
                         provider.addCouponByName(spot.name, spot.category ?? '장소');
+                        provider.updateStampCouponProgress(spot.name);
                         _showCouponReceivedModal(context, spot.name);
                       },
               )
@@ -1542,8 +1738,8 @@ class _SpotActionButtons extends StatelessWidget {
                 label: '리뷰작성',
                 icon: Icons.edit_outlined,
                 isPrimary: true,
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final result = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ReviewWriteScreen(
@@ -1552,6 +1748,10 @@ class _SpotActionButtons extends StatelessWidget {
                       ),
                     ),
                   );
+                  if (result == true && context.mounted) {
+                    context.read<AppProvider>().updateStampReviewProgress(spot.name);
+                    _showStampEarnedModal(context, spot.name);
+                  }
                 },
               ),
             const SizedBox(width: 8),

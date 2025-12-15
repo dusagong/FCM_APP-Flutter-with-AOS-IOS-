@@ -3,3 +3,4 @@ export 'place.dart';
 export 'coupon.dart';
 export 'review.dart';
 export 'recommendation.dart';
+export 'stamp.dart';

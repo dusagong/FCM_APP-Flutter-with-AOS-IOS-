@@ -11,3 +11,4 @@ export 'review_write_screen.dart';
 export 'reviewable_places_screen.dart';
 export 'my_page_screen.dart';
 export 'my_reviews_screen.dart';
+export 'stamp_screen.dart';

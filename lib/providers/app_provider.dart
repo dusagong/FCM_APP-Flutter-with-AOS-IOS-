@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/travel_api_service.dart';
 import '../services/photo_card_storage_service.dart';
+import '../services/stamp_storage_service.dart';
 
 
 class AppProvider extends ChangeNotifier {
@@ -23,6 +24,9 @@ class AppProvider extends ChangeNotifier {
   // Reviews
   List<Review> _reviews = [];
   final List<ReviewablePlace> _reviewablePlaces = [];
+
+  // Stamps (코스 스탬프)
+  List<CourseStamp> _stamps = [];
 
   // Current destination (from PhotoCard)
   String? _currentProvince;
@@ -58,6 +62,13 @@ class AppProvider extends ChangeNotifier {
   List<SpotWithLocation> get recommendedSpots => _recommendationResponse?.spots ?? [];
   RecommendedCourse? get recommendedCourse => _recommendationResponse?.course;
 
+  // Stamp Getters
+  List<CourseStamp> get stamps => _stamps;
+  List<CourseStamp> get completedStamps => _stamps.where((s) => s.isCompleted).toList();
+  List<CourseStamp> get inProgressStamps => _stamps.where((s) => !s.isCompleted).toList();
+  int get stampCount => _stamps.length;
+  int get completedStampCount => completedStamps.length;
+
   // Stats
   int get photoCardCount => _photoCards.length;
   int get couponCount => _coupons.length;
@@ -66,6 +77,7 @@ class AppProvider extends ChangeNotifier {
   AppProvider() {
     _initSampleData();
     _loadPhotoCardsFromStorage();
+    _loadStampsFromStorage();
   }
 
   /// SharedPreferences에서 PhotoCard 로드
@@ -100,6 +112,19 @@ class AppProvider extends ChangeNotifier {
     _reviews = [];
 
     notifyListeners();
+  }
+
+  /// SharedPreferences에서 스탬프 로드
+  Future<void> _loadStampsFromStorage() async {
+    try {
+      final storedStamps = await StampStorageService.getAllStamps();
+      if (storedStamps.isNotEmpty) {
+        _stamps = storedStamps;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('스탬프 로드 에러: $e');
+    }
   }
 
   // Photo Card Methods
@@ -477,5 +502,158 @@ class AppProvider extends ChangeNotifier {
   // Generate new photo card ID
   String generateId() {
     return _uuid.v4();
+  }
+
+  // ========== Stamp Methods ==========
+
+  /// 포토카드별 스탬프 조회
+  List<CourseStamp> getStampsByPhotoCard(String photoCardId) {
+    return _stamps.where((s) => s.photoCardId == photoCardId).toList();
+  }
+
+  /// 코스 스탬프 생성 (만남승강장에서 코스 추천 받을 때 호출)
+  Future<CourseStamp> createCourseStamp({
+    required String photoCardId,
+    required RecommendedCourse course,
+    required String province,
+    required String city,
+  }) async {
+    // 이미 같은 포토카드 + 코스 조합의 스탬프가 있는지 확인
+    final existingStamp = _stamps.firstWhere(
+      (s) => s.photoCardId == photoCardId && s.courseTitle == course.title,
+      orElse: () => CourseStamp(
+        id: '',
+        photoCardId: '',
+        courseTitle: '',
+        province: '',
+        city: '',
+        stopProgresses: [],
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    if (existingStamp.id.isNotEmpty) {
+      return existingStamp; // 이미 존재하면 기존 스탬프 반환
+    }
+
+    // 새 스탬프 생성
+    final stamp = CourseStamp(
+      id: _uuid.v4(),
+      photoCardId: photoCardId,
+      courseTitle: course.title,
+      province: province,
+      city: city,
+      stopProgresses: course.stops.map((stop) => StopProgress(
+        order: stop.order,
+        stopName: stop.name,
+        category: stop.category,
+      )).toList(),
+      createdAt: DateTime.now(),
+    );
+
+    _stamps.insert(0, stamp);
+    await StampStorageService.saveStamp(stamp);
+    notifyListeners();
+
+    return stamp;
+  }
+
+  /// 스탬프 쿠폰 진행상황 업데이트
+  Future<void> updateStampCouponProgress(String stopName) async {
+    // 현재 포토카드의 스탬프들에서 해당 장소 찾기
+    if (_currentPhotoCard == null) return;
+
+    for (var i = 0; i < _stamps.length; i++) {
+      final stamp = _stamps[i];
+      if (stamp.photoCardId != _currentPhotoCard!.id) continue;
+
+      final stopIndex = stamp.stopProgresses.indexWhere(
+        (s) => s.stopName == stopName,
+      );
+
+      if (stopIndex != -1) {
+        final updatedProgresses = List<StopProgress>.from(stamp.stopProgresses);
+        updatedProgresses[stopIndex] = updatedProgresses[stopIndex].copyWith(
+          hasCoupon: true,
+          couponReceivedAt: DateTime.now(),
+        );
+
+        // 완료 시점 설정: 이미 완료된 적 있으면 기존 값 유지, 처음 완료되면 현재 시간
+        DateTime? newCompletedAt = stamp.completedAt;
+        if (newCompletedAt == null && _checkStampCompletion(updatedProgresses)) {
+          newCompletedAt = DateTime.now();
+        }
+
+        final updatedStamp = stamp.copyWith(
+          stopProgresses: updatedProgresses,
+          completedAt: newCompletedAt,
+        );
+
+        _stamps[i] = updatedStamp;
+        await StampStorageService.saveStamp(updatedStamp);
+        notifyListeners();
+        break;
+      }
+    }
+  }
+
+  /// 스탬프 리뷰 진행상황 업데이트
+  Future<void> updateStampReviewProgress(String stopName) async {
+    // 현재 포토카드의 스탬프들에서 해당 장소 찾기
+    if (_currentPhotoCard == null) return;
+
+    for (var i = 0; i < _stamps.length; i++) {
+      final stamp = _stamps[i];
+      if (stamp.photoCardId != _currentPhotoCard!.id) continue;
+
+      final stopIndex = stamp.stopProgresses.indexWhere(
+        (s) => s.stopName == stopName,
+      );
+
+      if (stopIndex != -1) {
+        final updatedProgresses = List<StopProgress>.from(stamp.stopProgresses);
+        updatedProgresses[stopIndex] = updatedProgresses[stopIndex].copyWith(
+          hasReview: true,
+          reviewWrittenAt: DateTime.now(),
+        );
+
+        // 완료 시점 설정: 이미 완료된 적 있으면 기존 값 유지, 처음 완료되면 현재 시간
+        DateTime? newCompletedAt = stamp.completedAt;
+        if (newCompletedAt == null && _checkStampCompletion(updatedProgresses)) {
+          newCompletedAt = DateTime.now();
+        }
+
+        final updatedStamp = stamp.copyWith(
+          stopProgresses: updatedProgresses,
+          completedAt: newCompletedAt,
+        );
+
+        _stamps[i] = updatedStamp;
+        await StampStorageService.saveStamp(updatedStamp);
+        notifyListeners();
+        break;
+      }
+    }
+  }
+
+  /// 스탬프 완료 여부 체크
+  bool _checkStampCompletion(List<StopProgress> progresses) {
+    return progresses.every((p) => p.isCompleted);
+  }
+
+  /// 스탬프 삭제
+  Future<void> deleteStamp(String stampId) async {
+    _stamps.removeWhere((s) => s.id == stampId);
+    await StampStorageService.deleteStamp(stampId);
+    notifyListeners();
+  }
+
+  /// 특정 스탬프 조회
+  CourseStamp? getStampById(String stampId) {
+    try {
+      return _stamps.firstWhere((s) => s.id == stampId);
+    } catch (e) {
+      return null;
+    }
   }
 }

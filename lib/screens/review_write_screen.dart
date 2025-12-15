@@ -108,7 +108,8 @@ class _ReviewWriteScreenState extends State<ReviewWriteScreen> {
       const SnackBar(content: Text('리뷰가 등록되었습니다!')),
     );
 
-    Navigator.pop(context);
+    // 스탬프 진행상황 업데이트를 위해 true 반환
+    Navigator.pop(context, true);
   }
 
   @override
