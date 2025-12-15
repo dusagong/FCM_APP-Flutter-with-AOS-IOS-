@@ -237,10 +237,23 @@ class PhotoCardWidget extends StatelessWidget {
   Widget _buildBack(BuildContext context) {
     return Stack(
       children: [
-        // Background Pattern (Lined Paper + Divider)
+        // Background Pattern (Film Sprockets below header)
         Positioned.fill(
           child: CustomPaint(
             painter: _PostcardBackgroundPainter(),
+          ),
+        ),
+
+        // Postmark (Below header)
+        Positioned(
+          top: 80,
+          right: 30,
+          child: Transform.rotate(
+            angle: -0.2, 
+            child: Opacity(
+              opacity: 0.8,
+              child: _PostmarkWidget(date: photoCard.formattedDate),
+            ),
           ),
         ),
 
@@ -260,7 +273,7 @@ class PhotoCardWidget extends StatelessWidget {
 
         Column(
           children: [
-            // Header (Rail Film Style)
+            // Header (Rail Film Style) - No margin to keep full width feel or match front
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: const BoxDecoration(
@@ -305,16 +318,10 @@ class PhotoCardWidget extends StatelessWidget {
             // Main Content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24), // Padding to avoid sprockets
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.format_quote_rounded,
-                      size: 32,
-                      color: AppColors.primary.withOpacity(0.3),
-                    ),
-                    const SizedBox(height: 16),
                     Text(
                       photoCard.aiQuote,
                       textAlign: TextAlign.center,
@@ -323,15 +330,6 @@ class PhotoCardWidget extends StatelessWidget {
                         fontFamily: 'Courier', // Typewriter style
                         color: Colors.black87,
                         fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Transform.rotate(
-                      angle: math.pi,
-                      child: Icon(
-                        Icons.format_quote_rounded,
-                        size: 32,
-                        color: AppColors.primary.withOpacity(0.3),
                       ),
                     ),
                   ],
@@ -343,7 +341,7 @@ class PhotoCardWidget extends StatelessWidget {
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
-                padding: const EdgeInsets.only(right: 24, bottom: 24),
+                padding: const EdgeInsets.only(right: 36, bottom: 24),
                 child: _buildDestinationStamp(),
               ),
             ),
@@ -354,6 +352,8 @@ class PhotoCardWidget extends StatelessWidget {
       ],
     );
   }
+
+  // ... (keep existing methods)
 
   Widget _buildDestinationStamp({double scale = 1.0}) {
     return Transform.scale(
@@ -389,6 +389,8 @@ class PhotoCardWidget extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 photoCard.formattedDate,
+                maxLines: 1,
+                overflow: TextOverflow.visible,
                 style: AppTypography.labelSmall.copyWith(
                   color: AppColors.primary.withOpacity(0.6),
                   fontFamily: 'Monospace',
@@ -425,8 +427,6 @@ class PhotoCardWidget extends StatelessWidget {
       ],
     );
   }
-
-
 }
 
 class _PlaceholderPainter extends CustomPainter {
@@ -448,29 +448,157 @@ class _PlaceholderPainter extends CustomPainter {
 class _PostcardBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.1)
+    // 1. Film Sprockets (Left & Right) - Start below header (~60px)
+    final sprocketPaint = Paint()
+      ..color = const Color(0xFFE0E0E0)
+      ..style = PaintingStyle.fill;
+      
+    final borderPaint = Paint()
+      ..color = Colors.black12
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
+    const double sprocketWidth = 12.0;
+    const double sprocketHeight = 16.0;
+    const double sprocketSpacing = 12.0;
+    const double sideMargin = 6.0;
 
+    // Draw background texture fill
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height), 
+      Paint()..color = const Color(0xFFF9F9F9)
+    );
 
-    // Horizontal Lines (Writing lines)
-    double startY = size.height * 0.25 - 30.0; // Added one more line at top
-    const lineHeight = 30.0;
-    
-    while (startY < size.height - 20) {
-      canvas.drawLine(
-        Offset(20, startY),
-        Offset(size.width - 20, startY),
-        linePaint,
+    // Left & Right Sprockets - Start below header
+    double y = 70; // Header is roughly 50-60, so 70 is safe spacing
+    while (y < size.height - 20) {
+      // Left
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(sideMargin, y, sprocketWidth, sprocketHeight),
+          const Radius.circular(2),
+        ),
+        sprocketPaint,
       );
-      startY += lineHeight;
+      
+      // Right
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(size.width - sideMargin - sprocketWidth, y, sprocketWidth, sprocketHeight),
+          const Radius.circular(2),
+        ),
+        sprocketPaint,
+      );
+      
+      y += sprocketHeight + sprocketSpacing;
     }
 
-
+    // 2. Vintage Border (Inset)
+    // Adjust top to be below header
+    final borderRect = Rect.fromLTWH(
+      30, 
+      70, // Start below sprockets start
+      size.width - 60, 
+      size.height - 90
+    );
+    
+    // Outer thin line
+    canvas.drawRect(borderRect, borderPaint);
+    
+    // Inner thin line
+    final innerBorderRect = borderRect.deflate(3);
+    canvas.drawRect(
+      innerBorderRect, 
+      Paint()
+        ..color = const Color(0xFFD4AF37).withOpacity(0.3)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+    );
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+class _PostmarkWidget extends StatelessWidget {
+  final String date;
+
+  const _PostmarkWidget({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.black26, width: 2),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Inner Circle
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.black12, width: 1),
+            ),
+          ),
+          // Text
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'RAIL FILM',
+                style: AppTypography.labelSmall.copyWith(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black38,
+                ),
+              ),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  date,
+                  maxLines: 1,
+                  style: AppTypography.labelSmall.copyWith(
+                    fontSize: 10,
+                    color: Colors.black54,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'CHECKED',
+                style: AppTypography.labelSmall.copyWith(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black38,
+                ),
+              ),
+            ],
+          ),
+          // Waves
+          Positioned(
+            left: 0, 
+            right: 0,
+            top: 20,
+            child: Divider(color: Colors.black12, thickness: 1),
+          ),
+          Positioned(
+            left: 0, 
+            right: 0,
+            bottom: 20,
+            child: Divider(color: Colors.black12, thickness: 1),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
