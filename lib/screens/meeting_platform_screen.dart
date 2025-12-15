@@ -46,10 +46,23 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
   @override
   void initState() {
     super.initState();
+    debugPrint('🎬 [ACTION] MeetingPlatformScreen 진입 - ${widget.photoCard.city}');
     _tabController = TabController(length: 3, vsync: this);
+
+    // 탭 변경 리스너 추가
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        final tabNames = ['추천코스', '전체장소', '지도'];
+        debugPrint('🎬 [ACTION] 탭 전환: ${tabNames[_tabController.index]}');
+      }
+    });
 
     // preloadedResponse가 있으면 Provider에 설정하고 스탬프 생성
     if (widget.preloadedResponse != null) {
+      debugPrint('🎬 [ACTION] 사전 로드된 추천 데이터 적용');
+      debugPrint('🎬 [ACTION]   - spots: ${widget.preloadedResponse!.spots.length}개');
+      debugPrint('🎬 [ACTION]   - course: ${widget.preloadedResponse!.course != null ? '있음' : '없음'}');
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final provider = context.read<AppProvider>();
         provider.setRecommendationResponse(widget.preloadedResponse!);
@@ -57,6 +70,7 @@ class _MeetingPlatformScreenState extends State<MeetingPlatformScreen>
         // 코스가 있으면 스탬프 자동 생성
         final course = widget.preloadedResponse!.course;
         if (course != null) {
+          debugPrint('🎬 [ACTION] 스탬프 자동 생성 - ${course.stops.length}개 정차지');
           provider.createCourseStamp(
             photoCardId: widget.photoCard.id,
             course: course,
@@ -780,6 +794,7 @@ class _CourseStopActionButtons extends StatelessWidget {
                 onTap: hasCoupon
                     ? null
                     : () {
+                        debugPrint('🎬 [ACTION] 쿠폰받기 클릭 - ${stop.name}');
                         provider.addCouponByName(stop.name, stop.category ?? '장소');
                         provider.updateStampCouponProgress(stop.name);
                         _showCouponReceivedModal(context, stop.name);
@@ -791,6 +806,7 @@ class _CourseStopActionButtons extends StatelessWidget {
                 icon: Icons.edit_outlined,
                 isPrimary: true,
                 onTap: () async {
+                  debugPrint('🎬 [ACTION] 리뷰작성 클릭 - ${stop.name}');
                   final result = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
@@ -801,6 +817,7 @@ class _CourseStopActionButtons extends StatelessWidget {
                     ),
                   );
                   if (result == true && context.mounted) {
+                    debugPrint('🎬 [ACTION] 리뷰 작성 완료 - ${stop.name}');
                     context.read<AppProvider>().updateStampReviewProgress(stop.name);
                     _showStampEarnedModal(context, stop.name);
                   }
@@ -811,6 +828,7 @@ class _CourseStopActionButtons extends StatelessWidget {
               label: '리뷰보기',
               icon: Icons.rate_review_outlined,
               onTap: () {
+                debugPrint('🎬 [ACTION] 리뷰보기 클릭 - ${stop.name}');
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -828,6 +846,7 @@ class _CourseStopActionButtons extends StatelessWidget {
                 label: '지도',
                 icon: Icons.map_outlined,
                 onTap: () {
+                  debugPrint('🎬 [ACTION] 지도보기 클릭 - ${stop.name} (${stop.latitude}, ${stop.longitude})');
                   MoveToMapNotification(
                     latitude: stop.latitude!,
                     longitude: stop.longitude!,
