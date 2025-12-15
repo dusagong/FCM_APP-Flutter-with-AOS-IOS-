@@ -388,164 +388,160 @@ class _CourseStopItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline
-          Column(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _getCategoryColor(stop.category),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '${stop.order}',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Timeline
+            Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: _getCategoryColor(stop.category),
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ),
-              if (!isLast) ...[
-                // 이동시간 표시가 있으면 이동시간 배지 표시
-                if (stop.travelTimeToNext != null) ...[
-                  Container(
-                    width: 2,
-                    height: 20,
-                    color: AppColors.border,
-                  ),
-                  _TravelTimeBadge(
-                    travelTime: stop.travelTimeToNext!,
-                    distanceKm: stop.distanceToNextKm,
-                  ),
-                  Container(
-                    width: 2,
-                    height: 20,
-                    color: AppColors.border,
-                  ),
-                ] else
-                  Container(
-                    width: 2,
-                    height: 100,
-                    color: AppColors.border,
-                  ),
-              ],
-            ],
-          ),
-          const SizedBox(width: 12),
-          // Content
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category & Time
-                  Row(
-                    children: [
-                      CategoryBadge(
-                        label: stop.category ?? '장소',
-                        color: _getCategoryColor(stop.category),
-                        emoji: _getCategoryEmoji(stop.category),
-                      ),
-                      const Spacer(),
-                      if (stop.time != null)
-                        Text(
-                          stop.time!,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Name
-                  Text(
-                    stop.name,
-                    style: AppTypography.titleMedium,
-                  ),
-                  // Address
-                  if (stop.address != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      stop.address!,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                  child: Center(
+                    child: Text(
+                      '${stop.order}',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ],
-                  // Duration
-                  if (stop.duration != null) ...[
-                    const SizedBox(height: 4),
-                    Row(
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        const Icon(Icons.timer_outlined, size: 14, color: AppColors.textTertiary),
-                        const SizedBox(width: 4),
-                        Text(
-                          stop.duration!,
-                          style: AppTypography.labelSmall,
-                        ),
+                        const _RailTrackVertical(),
+                        if (stop.travelTimeToNext != null)
+                          Container(
+                            color: AppColors.background,
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: _TravelTimeBadge(
+                              travelTime: stop.travelTimeToNext!,
+                              distanceKm: stop.distanceToNextKm,
+                            ),
+                          ),
                       ],
                     ),
-                  ],
-                  // Reason (추천 이유)
-                  if (stop.reason != null) ...[
+                  ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category & Time
+                    Row(
+                      children: [
+                        CategoryBadge(
+                          label: stop.category ?? '장소',
+                          color: _getCategoryColor(stop.category),
+                          emoji: _getCategoryEmoji(stop.category),
+                        ),
+                        const Spacer(),
+                        if (stop.time != null)
+                          Text(
+                            stop.time!,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+                    // Name
+                    Text(
+                      stop.name,
+                      style: AppTypography.titleMedium,
+                    ),
+                    // Address
+                    if (stop.address != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        stop.address!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                      child: Row(
+                    ],
+                    // Duration
+                    if (stop.duration != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 4),
+                          Text(
+                            stop.duration!,
+                            style: AppTypography.labelSmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                    // Reason (추천 이유)
+                    if (stop.reason != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.favorite_rounded, size: 14, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                stop.reason!,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    // Tip
+                    if (stop.tip != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.favorite_rounded, size: 14, color: AppColors.primary),
-                          const SizedBox(width: 6),
+                          const Icon(Icons.lightbulb_outline_rounded, size: 14, color: AppColors.warning),
+                          const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              stop.reason!,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.primary,
+                              stop.tip!,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
+                    // 리뷰보기/쿠폰받기 버튼
+                    const SizedBox(height: 12),
+                    _CourseStopActionButtons(stop: stop),
                   ],
-                  // Tip
-                  if (stop.tip != null) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.lightbulb_outline_rounded, size: 14, color: AppColors.warning),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            stop.tip!,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  // 리뷰보기/쿠폰받기 버튼
-                  const SizedBox(height: 12),
-                  _CourseStopActionButtons(stop: stop),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2712,4 +2708,56 @@ class _ZoomButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RailTrackVertical extends StatelessWidget {
+  final double? height;
+  
+  const _RailTrackVertical({this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 14,
+      height: height ?? double.infinity,
+      child: CustomPaint(
+        painter: _RailTrackPainter(color: AppColors.border),
+      ),
+    );
+  }
+}
+
+class _RailTrackPainter extends CustomPainter {
+  final Color color;
+  
+  _RailTrackPainter({this.color = const Color(0xFFE0E0E0)});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // Defines
+    const double railWidth = 2.0;
+    // const double trackWidth = 14.0; // Implicit from size.width
+    const double sleeperHeight = 2.0;
+    const double sleeperSpacing = 4.0; // Denser sleepers
+
+    // Draw Left Rail
+    canvas.drawRect(Rect.fromLTWH(0, 0, railWidth, size.height), paint);
+
+    // Draw Right Rail
+    canvas.drawRect(Rect.fromLTWH(size.width - railWidth, 0, railWidth, size.height), paint);
+
+    // Draw Sleepers (Ties)
+    double y = 2.0;
+    while (y < size.height) {
+      canvas.drawRect(Rect.fromLTWH(0, y, size.width, sleeperHeight), paint);
+      y += sleeperSpacing + sleeperHeight;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
