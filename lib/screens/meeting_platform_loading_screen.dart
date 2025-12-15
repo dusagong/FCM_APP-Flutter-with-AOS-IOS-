@@ -27,6 +27,9 @@ class _MeetingPlatformLoadingScreenState
   bool _isCompleted = false;
   String _statusMessage = '';
 
+  // 최소 로딩 단계 수 (UX 향상을 위해 최소 4단계까지 보여줌)
+  static const int _minimumSteps = 4;
+
   final List<String> _loadingMessages = [
     'AI가 여행 코스를 분석하고 있어요',
     '커플에게 딱 맞는 장소를 찾고 있어요',
@@ -42,6 +45,16 @@ class _MeetingPlatformLoadingScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startPolling();
     });
+  }
+
+  /// 최소 로딩 단계를 보장하는 딜레이 (최소 4단계까지 보여줌)
+  Future<void> _ensureMinimumLoadingSteps() async {
+    // 현재 단계가 최소 단계보다 작으면 대기
+    while (_currentStep < _minimumSteps - 1 && mounted) {
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+    // 마지막 단계에서 잠시 대기 (사용자가 볼 수 있도록)
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   /// 세션 상태 polling 시작
@@ -116,6 +129,9 @@ class _MeetingPlatformLoadingScreenState
       // Provider의 _recommendationResponse 설정을 위해 fetchRecommendations 결과를 직접 설정
       // (현재 AppProvider에 setRecommendationResponse가 없으므로 직접 화면 전환)
 
+      // 최소 로딩 단계 보장 (UX 향상)
+      await _ensureMinimumLoadingSteps();
+
       setState(() => _isCompleted = true);
 
       if (mounted) {
@@ -153,8 +169,6 @@ class _MeetingPlatformLoadingScreenState
         city: widget.photoCard.city,
       );
 
-      setState(() => _isCompleted = true);
-
       if (result == null || !result.success) {
         setState(() {
           _hasError = true;
@@ -163,6 +177,11 @@ class _MeetingPlatformLoadingScreenState
         await _showErrorAndPop();
         return;
       }
+
+      // 최소 로딩 단계 보장 (UX 향상)
+      await _ensureMinimumLoadingSteps();
+
+      setState(() => _isCompleted = true);
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -201,7 +220,7 @@ class _MeetingPlatformLoadingScreenState
     int step = 0;
     while (!_isCompleted && !_hasError && mounted) {
       setState(() => _currentStep = step % _loadingMessages.length);
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 1200));
       step++;
     }
   }
