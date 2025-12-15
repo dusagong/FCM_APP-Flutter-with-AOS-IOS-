@@ -7,6 +7,7 @@ class Review {
   final List<String> imageUrls;
   final DateTime createdAt;
   final String? userId;
+  final String? photoCardId;
 
   Review({
     required this.id,
@@ -17,6 +18,7 @@ class Review {
     required this.imageUrls,
     required this.createdAt,
     this.userId,
+    this.photoCardId,
   });
 
   String get formattedDate {
@@ -27,47 +29,73 @@ class Review {
     String? id,
     String? placeId,
     String? placeName,
-
     String? content,
     List<String>? imageUrls,
     DateTime? createdAt,
     String? userId,
+    String? photoCardId,
   }) {
     return Review(
       id: id ?? this.id,
       placeId: placeId ?? this.placeId,
       placeName: placeName ?? this.placeName,
-
       content: content ?? this.content,
       imageUrls: imageUrls ?? this.imageUrls,
       createdAt: createdAt ?? this.createdAt,
       userId: userId ?? this.userId,
+      photoCardId: photoCardId ?? this.photoCardId,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'placeId': placeId,
-      'placeName': placeName,
-
+      'place_id': placeId,
+      'place_name': placeName,
       'content': content,
-      'imageUrls': imageUrls,
-      'createdAt': createdAt.toIso8601String(),
-      'userId': userId,
+      'image_urls': imageUrls,
+      'created_at': createdAt.toIso8601String(),
+      'user_id': userId,
+      'photo_card_id': photoCardId,
     };
   }
 
   factory Review.fromJson(Map<String, dynamic> json) {
+    // 서버 API (snake_case) 또는 로컬 (camelCase) 둘 다 지원
     return Review(
-      id: json['id'],
-      placeId: json['placeId'],
-      placeName: json['placeName'],
+      id: json['id'] ?? '',
+      placeId: json['place_id'] ?? json['placeId'] ?? '',
+      placeName: json['place_name'] ?? json['placeName'] ?? '',
+      content: json['content'] ?? '',
+      imageUrls: List<String>.from(json['image_urls'] ?? json['imageUrls'] ?? []),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : (json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now()),
+      userId: json['user_id'] ?? json['userId'],
+      photoCardId: json['photo_card_id'] ?? json['photoCardId'],
+    );
+  }
+}
 
-      content: json['content'],
-      imageUrls: List<String>.from(json['imageUrls']),
-      createdAt: DateTime.parse(json['createdAt']),
-      userId: json['userId'],
+/// 리뷰 목록 결과 (서버 API 응답용)
+class ReviewListResult {
+  final List<Review> reviews;
+  final int totalCount;
+
+  ReviewListResult({
+    required this.reviews,
+    required this.totalCount,
+  });
+
+  factory ReviewListResult.fromJson(Map<String, dynamic> json) {
+    return ReviewListResult(
+      reviews: (json['reviews'] as List<dynamic>?)
+              ?.map((e) => Review.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      totalCount: json['total_count'] ?? 0,
     );
   }
 }
