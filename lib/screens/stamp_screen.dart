@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -243,17 +244,20 @@ class _StampCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: stamp.isCompleted
-            ? AppColors.secondary.withOpacity(0.05)
-            : AppColors.surfaceVariant.withOpacity(0.5),
+        color: const Color(0xFFFFFCF5), // Slightly warmer paper color
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: stamp.isCompleted
-              ? AppColors.secondary.withOpacity(0.3)
-              : AppColors.border,
+          color: AppColors.border,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,37 +266,53 @@ class _StampCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  stamp.courseTitle,
-                  style: AppTypography.titleSmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'COURSE ${stampIndex + 1}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Courier',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      stamp.courseTitle,
+                      style: AppTypography.titleSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
               if (stamp.isCompleted) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
-                        Icons.check_circle_rounded,
-                        size: 14,
+                        Icons.verified_rounded,
+                        size: 16,
                         color: Colors.white,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '완료',
+                        'COMPLETED',
                         style: AppTypography.labelSmall.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Courier',
                         ),
                       ),
                     ],
@@ -301,72 +321,35 @@ class _StampCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 12),
+          
+          const SizedBox(height: 24),
 
-          // 진행률 바
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '진행률',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    '${stamp.completedStopCount}/${stamp.totalStopCount} 완료 (${stamp.progressPercent}%)',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: stamp.progressRate,
-                  backgroundColor: AppColors.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    stamp.isCompleted ? AppColors.secondary : AppColors.primary,
-                  ),
-                  minHeight: 8,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // 정차지 진행상황
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: stamp.stopProgresses.map((progress) {
-              return _StopProgressChip(progress: progress);
-            }).toList(),
+          // 스탬프 그리드 (Ink Stamps)
+          Center(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              alignment: WrapAlignment.center,
+              children: stamp.stopProgresses.map((progress) {
+                return _InkStamp(stop: progress);
+              }).toList(),
+            ),
           ),
 
           // 완료 날짜
           if (stamp.completedAt != null) ...[
+            const SizedBox(height: 24),
+            Divider(color: AppColors.border.withOpacity(0.5)),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(
-                  Icons.celebration_rounded,
-                  size: 14,
-                  color: AppColors.secondary,
-                ),
-                const SizedBox(width: 4),
                 Text(
-                  '${stamp.completedAt!.year}.${stamp.completedAt!.month}.${stamp.completedAt!.day} 완료',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.secondary,
-                    fontWeight: FontWeight.w500,
+                  'Stamped on ${stamp.completedAt!.year}.${stamp.completedAt!.month.toString().padLeft(2,'0')}.${stamp.completedAt!.day.toString().padLeft(2,'0')}',
+                  style: const TextStyle(
+                    fontFamily: 'Courier',
+                    fontSize: 12,
+                    color: AppColors.textTertiary,
                   ),
                 ),
               ],
@@ -378,95 +361,106 @@ class _StampCard extends StatelessWidget {
   }
 }
 
-class _StopProgressChip extends StatelessWidget {
-  final StopProgress progress;
+class _InkStamp extends StatelessWidget {
+  final StopProgress stop;
 
-  const _StopProgressChip({required this.progress});
+  const _InkStamp({required this.stop});
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = progress.isCompleted;
-    final isTourist = progress.category == '관광지';
+    // Generate a consistent random seed based on stop name to keep visual consistent
+    // We use a predefined seed so it doesn't jitter on rebuilds
+    final random = math.Random(stop.stopName.hashCode);
+    final rotation = (random.nextDouble() - 0.5) * 0.4; // -0.2 to 0.2 rad
+    final isBlue = random.nextBool(); // Randomize ink color slightly (Blue vs Red)
+    
+    // Completed: Vivid Ink. Incomplete: Faint Gray Outline.
+    final inkColor = stop.isCompleted
+        ? (isBlue ? const Color(0xFF1A237E) : const Color(0xFFB71C1C)).withOpacity(0.8)
+        : AppColors.textTertiary.withOpacity(0.2);
+    
+    final borderColor = stop.isCompleted
+        ? inkColor
+        : AppColors.textTertiary.withOpacity(0.15);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isCompleted
-            ? AppColors.secondary.withOpacity(0.1)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCompleted
-              ? AppColors.secondary.withOpacity(0.3)
-              : AppColors.border,
+    return Transform.rotate(
+      angle: rotation,
+      child: Container(
+        width: 80,
+        height: 80,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: borderColor,
+            width: 2.5,
+          ),
+          borderRadius: _getShape(random.nextInt(3)), // Random shape
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (stop.isCompleted) ...[
+              Icon(
+                _getIconForCategory(stop.category),
+                size: 20,
+                color: inkColor.withOpacity(0.9),
+              ),
+              const SizedBox(height: 2),
+            ] else ...[
+              // Placeholder icon for incomplete
+               Icon(
+                Icons.help_outline_rounded,
+                size: 20,
+                color: inkColor,
+              ),
+              const SizedBox(height: 2),
+            ],
+            
+            Text(
+              stop.stopName.substring(0, math.min(stop.stopName.length, 8)).toUpperCase(),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.visible,
+              style: TextStyle(
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+                color: inkColor,
+                height: 1.0,
+              ),
+            ),
+            
+            if (stop.isCompleted) 
+              Text(
+                'VISITED',
+                style: TextStyle(
+                  fontFamily: 'Courier',
+                  fontSize: 7,
+                  color: inkColor.withOpacity(0.7),
+                ),
+              ),
+          ],
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 순서 번호
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? AppColors.secondary
-                  : AppColors.textTertiary.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${progress.order}',
-                style: TextStyle(
-                  color: isCompleted ? Colors.white : AppColors.textTertiary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          // 장소명
-          Text(
-            progress.stopName,
-            style: AppTypography.labelSmall.copyWith(
-              color: isCompleted
-                  ? AppColors.secondary
-                  : AppColors.textPrimary,
-              fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-          const SizedBox(width: 6),
-          // 상태 아이콘들
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 쿠폰 (관광지가 아닌 경우만)
-              if (!isTourist)
-                Icon(
-                  progress.hasCoupon
-                      ? Icons.local_offer_rounded
-                      : Icons.local_offer_outlined,
-                  size: 14,
-                  color: progress.hasCoupon
-                      ? AppColors.secondary
-                      : AppColors.textTertiary.withOpacity(0.5),
-                ),
-              if (!isTourist) const SizedBox(width: 4),
-              // 리뷰
-              Icon(
-                progress.hasReview
-                    ? Icons.rate_review_rounded
-                    : Icons.rate_review_outlined,
-                size: 14,
-                color: progress.hasReview
-                    ? AppColors.secondary
-                    : AppColors.textTertiary.withOpacity(0.5),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
+  }
+
+  BorderRadius _getShape(int type) {
+    switch (type) {
+      case 0: return BorderRadius.circular(50); // Circle
+      case 1: return BorderRadius.circular(10); // Rounded Rect
+      case 2: return BorderRadius.circular(4); // Sharp Rect
+      default: return BorderRadius.circular(50);
+    }
+  }
+
+  IconData _getIconForCategory(String? category) {
+    switch (category) {
+      case '역': return Icons.train;
+      case '관광지': return Icons.camera_alt;
+      case '식당': return Icons.restaurant;
+      case '카페': return Icons.coffee;
+      default: return Icons.place;
+    }
   }
 }
