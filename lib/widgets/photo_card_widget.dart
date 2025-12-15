@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class PhotoCardWidget extends StatelessWidget {
   final PhotoCard photoCard;
@@ -102,6 +103,7 @@ class PhotoCardWidget extends StatelessWidget {
                     ? Image.file(
                         File(photoCard.imagePath!),
                         fit: BoxFit.cover,
+                        key: ValueKey('${photoCard.id}_image'), // Force rebuild mechanism
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey[200],
@@ -224,7 +226,11 @@ class PhotoCardWidget extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ).animate(
+      onPlay: (controller) => controller.forward(from: 0),
+    )
+    .saturate(duration: 3000.ms, begin: 0, end: 1, curve: Curves.easeInOutCubic)
+    .fadeIn(duration: 2500.ms, curve: Curves.easeIn);
   }
 
   Widget _buildBack(BuildContext context) {
