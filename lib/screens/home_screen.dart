@@ -7,6 +7,8 @@ import '../widgets/common_widgets.dart';
 import 'camera_screen.dart';
 import 'photo_card_list_screen.dart';
 
+import 'package:flutter/services.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -15,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _isPunched = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,75 +65,107 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Ticket booth stripes
-              Positioned(
-                top: 0,
-                child: Container(
-                  width: 120,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          child: GestureDetector(
+            onTap: () {
+              if (!_isPunched) {
+                HapticFeedback.mediumImpact();
+                setState(() {
+                  _isPunched = true;
+                });
+              }
+            },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Ticket booth stripes
+                Positioned(
+                  top: 0,
+                  child: Container(
+                    width: 120,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
                   ),
                 ),
-              ),
-              // Main Icon
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.train_rounded,
-                      size: 40,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'STATION',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-              // Bottom perforation
-              Positioned(
-                bottom: -10,
-                child: Row(
+                // Main Icon
+                Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    8,
-                    (index) => Container(
-                      width: 10,
-                      height: 10,
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: const BoxDecoration(
-                        color: AppColors.background,
+                  children: [
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.train_rounded,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'STATION',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+                // Bottom perforation
+                Positioned(
+                  bottom: -10,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      8,
+                      (index) => Container(
+                        width: 10,
+                        height: 10,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: const BoxDecoration(
+                          color: AppColors.background,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                // Punched Hole Effect
+                if (_isPunched)
+                  Positioned(
+                    right: 20,
+                    bottom: 40,
+                    child: Container(
+                      width: 15,
+                      height: 15,
+                      decoration: const BoxDecoration(
+                        color: AppColors.background, // Background color to look like a hole
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 1,
+                            offset: Offset(0, 1) // Inner shadow simulation
+                          ) 
+                        ]
+                      ),
+                    ).animate().scale(duration: 200.ms, curve: Curves.easeOutBack),
+                  ),
+              ],
+            ),
           ),
         )
-            .animate()
-            .fadeIn(duration: 600.ms)
-            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1))
-            .shimmer(delay: 1000.ms, duration: 1500.ms, color: Colors.white.withOpacity(0.5)),
+            .animate(target: _isPunched ? 1 : 0)
+            .shake(hz: 8, curve: Curves.easeInOutCubic, duration: 300.ms) // Shake on punch
+            .scale(begin: const Offset(1, 1), end: const Offset(0.95, 0.95), duration: 100.ms, curve: Curves.easeInOut) // Slight compress
+            .then()
+            .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), duration: 200.ms, curve: Curves.elasticOut), // Bounce back
         const SizedBox(height: 32),
         // Title
         Text(
