@@ -287,16 +287,28 @@ class _RecommendedCourseCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (course.totalDuration != null) ...[
+                if (course.totalDuration != null || course.totalDistanceKm != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.schedule_rounded, color: Colors.white70, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        course.totalDuration!,
-                        style: AppTypography.bodySmall.copyWith(color: Colors.white70),
-                      ),
+                      if (course.totalDuration != null) ...[
+                        const Icon(Icons.schedule_rounded, color: Colors.white70, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          course.totalDuration!,
+                          style: AppTypography.bodySmall.copyWith(color: Colors.white70),
+                        ),
+                      ],
+                      if (course.totalDuration != null && course.totalDistanceKm != null)
+                        const SizedBox(width: 12),
+                      if (course.totalDistanceKm != null) ...[
+                        const Icon(Icons.straighten_rounded, color: Colors.white70, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '총 ${course.totalDistanceKm!.toStringAsFixed(1)}km',
+                          style: AppTypography.bodySmall.copyWith(color: Colors.white70),
+                        ),
+                      ],
                     ],
                   ),
                 ],
@@ -399,12 +411,30 @@ class _CourseStopItem extends StatelessWidget {
                   ),
                 ),
               ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 100,
-                  color: AppColors.border,
-                ),
+              if (!isLast) ...[
+                // 이동시간 표시가 있으면 이동시간 배지 표시
+                if (stop.travelTimeToNext != null) ...[
+                  Container(
+                    width: 2,
+                    height: 20,
+                    color: AppColors.border,
+                  ),
+                  _TravelTimeBadge(
+                    travelTime: stop.travelTimeToNext!,
+                    distanceKm: stop.distanceToNextKm,
+                  ),
+                  Container(
+                    width: 2,
+                    height: 20,
+                    color: AppColors.border,
+                  ),
+                ] else
+                  Container(
+                    width: 2,
+                    height: 100,
+                    color: AppColors.border,
+                  ),
+              ],
             ],
           ),
           const SizedBox(width: 12),
@@ -738,7 +768,9 @@ class _CourseStopActionButtons extends StatelessWidget {
         // 관광지만 제외하고 쿠폰받기 가능
         final hasCouponCategory = stop.category != '관광지';
 
-        return Row(
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
             // 1. 쿠폰받기 (관광지 제외) 또는 리뷰작성 (관광지)
             if (hasCouponCategory)
@@ -776,7 +808,6 @@ class _CourseStopActionButtons extends StatelessWidget {
                   }
                 },
               ),
-            const SizedBox(width: 8),
             // 2. 리뷰보기
             _ActionButton(
               label: '리뷰보기',
@@ -794,8 +825,7 @@ class _CourseStopActionButtons extends StatelessWidget {
               },
             ),
             // 3. 지도 보기 버튼 (좌표 정보가 있을 때만)
-            if (stop.hasLocation) ...[
-              const SizedBox(width: 8),
+            if (stop.hasLocation)
               _ActionButton(
                 label: '지도',
                 icon: Icons.map_outlined,
@@ -807,7 +837,6 @@ class _CourseStopActionButtons extends StatelessWidget {
                   ).dispatch(context);
                 },
               ),
-            ],
           ],
         );
       },
@@ -1307,6 +1336,69 @@ class _ActionButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 이동시간 표시 배지 (타임라인에서 정차지 사이에 표시)
+class _TravelTimeBadge extends StatelessWidget {
+  final String travelTime;
+  final double? distanceKm;
+
+  const _TravelTimeBadge({
+    required this.travelTime,
+    this.distanceKm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+        border: Border.all(
+          color: AppColors.info.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 이동시간
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.directions_car_rounded,
+                size: 12,
+                color: AppColors.info,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                travelTime,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.info,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+          // 거리 (있을 때만)
+          if (distanceKm != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              '${distanceKm!.toStringAsFixed(1)}km',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.info.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w500,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1840,7 +1932,7 @@ class _MapViewState extends State<_MapView> {
     if (widget.focusedTarget != null) {
       return widget.focusedTarget!;
     }
-    
+
     // 장소 목록에서 좌표가 있는 첫 번째 장소의 위치를 기준으로 함
     for (final spot in spots) {
       if (spot.hasLocation) {
@@ -1945,6 +2037,67 @@ class _MapViewState extends State<_MapView> {
       pattern: [10, 6], // 점선 패턴
     );
     await _mapController!.addOverlay(polyline);
+
+    // 🔴 구간별 거리 라벨 추가 (점선 위에 거리 표시)
+    debugPrint('[MAP] Adding distance labels for ${stopsWithLocation.length} stops');
+    for (int i = 0; i < stopsWithLocation.length - 1; i++) {
+      if (!mounted) return;
+      final currentStop = stopsWithLocation[i];
+      final nextStop = stopsWithLocation[i + 1];
+
+      debugPrint('[MAP] Stop $i: ${currentStop.name}, distanceToNextKm: ${currentStop.distanceToNextKm}');
+
+      // 거리 정보가 있는 경우에만 표시
+      if (currentStop.distanceToNextKm != null) {
+        // 두 지점의 중간점 계산
+        final midLat = (currentStop.latitude! + nextStop.latitude!) / 2;
+        final midLng = (currentStop.longitude! + nextStop.longitude!) / 2;
+
+        final distanceText = '${currentStop.distanceToNextKm!.toStringAsFixed(1)}km';
+
+        // 거리 라벨 아이콘 생성
+        final distanceIcon = await NOverlayImage.fromWidget(
+          widget: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: blueColor, width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              distanceText,
+              style: const TextStyle(
+                color: Color(0xFF2196F3),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          size: const Size(60, 24),
+          context: context,
+        );
+
+        if (!mounted) return;
+
+        final distanceMarker = NMarker(
+          id: 'distance_${i}_${i + 1}',
+          position: NLatLng(midLat, midLng),
+          icon: distanceIcon,
+        );
+
+        await _mapController!.addOverlay(distanceMarker);
+        debugPrint('[MAP] Added distance marker: $distanceText at ($midLat, $midLng)');
+      } else {
+        debugPrint('[MAP] Skip distance marker for stop $i: distanceToNextKm is null');
+      }
+    }
 
     // 코스 마커 추가 (파란색으로 구분)
     final courseMarkers = <NMarker>[];
