@@ -392,33 +392,34 @@ class _CourseStopItem extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Timeline
-            Column(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _getCategoryColor(stop.category),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${stop.order}',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+            // Timeline - 고정 너비로 일관된 정렬 유지 (이동시간 배지 포함)
+            SizedBox(
+              width: 70,
+              child: Column(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: _getCategoryColor(stop.category),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${stop.order}',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (!isLast)
                   Expanded(
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
                         const _RailTrackVertical(),
-                        if (stop.travelTimeToNext != null)
+                        if (!isLast && stop.travelTimeToNext != null)
                           Container(
                             color: AppColors.background,
                             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -430,7 +431,8 @@ class _CourseStopItem extends StatelessWidget {
                       ],
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(width: 12),
             // Content
@@ -1294,7 +1296,7 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: isDisabled ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: isPrimary ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(AppBorderRadius.sm),
@@ -1311,14 +1313,14 @@ class _ActionButton extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 14,
+              size: 12,
               color: isDisabled
                   ? AppColors.textTertiary
                   : isPrimary
                       ? Colors.white
                       : AppColors.textSecondary,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
@@ -1328,6 +1330,7 @@ class _ActionButton extends StatelessWidget {
                         ? Colors.white
                         : AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
+                fontSize: 11,
               ),
             ),
           ],
