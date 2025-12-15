@@ -399,12 +399,27 @@ class _CourseStopItem extends StatelessWidget {
                   ),
                 ),
               ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 100,
-                  color: AppColors.border,
-                ),
+              if (!isLast) ...[
+                // 이동시간 표시가 있으면 이동시간 배지 표시
+                if (stop.travelTimeToNext != null) ...[
+                  Container(
+                    width: 2,
+                    height: 20,
+                    color: AppColors.border,
+                  ),
+                  _TravelTimeBadge(travelTime: stop.travelTimeToNext!),
+                  Container(
+                    width: 2,
+                    height: 20,
+                    color: AppColors.border,
+                  ),
+                ] else
+                  Container(
+                    width: 2,
+                    height: 100,
+                    color: AppColors.border,
+                  ),
+              ],
             ],
           ),
           const SizedBox(width: 12),
@@ -1307,6 +1322,47 @@ class _ActionButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 이동시간 표시 배지 (타임라인에서 정차지 사이에 표시)
+class _TravelTimeBadge extends StatelessWidget {
+  final String travelTime;
+
+  const _TravelTimeBadge({required this.travelTime});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+        border: Border.all(
+          color: AppColors.info.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.directions_car_rounded,
+            size: 12,
+            color: AppColors.info,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            travelTime,
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.info,
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }

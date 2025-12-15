@@ -70,6 +70,7 @@ class CourseStop {
   final String? category;
   final String? time; // "오전 10시"
   final String? duration; // "1시간"
+  final String? travelTimeToNext; // "다음 장소까지 약 10분"
   final String? reason; // 커플에게 추천하는 이유
   final String? tip; // 방문 팁
 
@@ -83,6 +84,7 @@ class CourseStop {
     this.category,
     this.time,
     this.duration,
+    this.travelTimeToNext,
     this.reason,
     this.tip,
   });
@@ -98,6 +100,7 @@ class CourseStop {
       category: json['category'],
       time: json['time'],
       duration: json['duration'],
+      travelTimeToNext: json['travel_time_to_next'],
       reason: json['reason'],
       tip: json['tip'],
     );
@@ -114,6 +117,7 @@ class CourseStop {
       'category': category,
       'time': time,
       'duration': duration,
+      'travel_time_to_next': travelTimeToNext,
       'reason': reason,
       'tip': tip,
     };
