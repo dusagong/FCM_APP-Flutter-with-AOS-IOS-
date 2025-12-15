@@ -89,14 +89,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         });
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = '카메라 초기화 실패: $e';
-        _isInitialized = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = '카메라 초기화 실패: $e';
+          _isInitialized = false;
+        });
+      }
     }
   }
 
   Future<void> _switchCamera() async {
+    if (!mounted) return;
     setState(() {
       _isFrontCamera = !_isFrontCamera;
       _isInitialized = false;
@@ -109,14 +112,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     if (_controller == null || !_controller!.value.isInitialized || _isCapturing) {
       return;
     }
+    if (!mounted) return;
 
     setState(() => _isCapturing = true);
 
     try {
       final XFile photo = await _controller!.takePicture();
-      setState(() {
-        _capturedImage = photo;
-      });
+      if (mounted) {
+        setState(() {
+          _capturedImage = photo;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -124,7 +130,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         );
       }
     } finally {
-      setState(() => _isCapturing = false);
+      if (mounted) {
+        setState(() => _isCapturing = false);
+      }
     }
   }
 
@@ -137,7 +145,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         imageQuality: 90,
       );
 
-      if (photo != null) {
+      if (photo != null && mounted) {
         setState(() => _capturedImage = photo);
       }
     } catch (e) {
@@ -150,6 +158,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   }
 
   void _retake() {
+    if (!mounted) return;
     setState(() => _capturedImage = null);
   }
 

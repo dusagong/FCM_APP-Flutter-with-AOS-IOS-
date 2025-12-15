@@ -12,6 +12,7 @@ import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/common_widgets.dart';
+import '../widgets/train_door_page_route.dart';
 import '../widgets/photo_card_widget.dart';
 import '../services/travel_api_service.dart';
 import 'camera_screen.dart';
@@ -220,8 +221,8 @@ class _PhotoCardDetailModalState extends State<_PhotoCardDetailModal> {
         Navigator.pop(context);
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => MeetingPlatformLoadingScreen(
+          TrainDoorPageRoute(
+            page: MeetingPlatformLoadingScreen(
               photoCard: widget.photoCard,
             ),
           ),

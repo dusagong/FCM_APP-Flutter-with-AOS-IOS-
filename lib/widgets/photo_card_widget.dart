@@ -113,6 +113,11 @@ class PhotoCardWidget extends StatelessWidget {
                           );
                         },
                       )
+                      .animate(
+                        onPlay: (controller) => controller.forward(from: 0),
+                      )
+                      .saturate(duration: 3000.ms, begin: 0, end: 1, curve: Curves.easeInOutCubic)
+                      .fadeIn(duration: 2500.ms, curve: Curves.easeIn)
                     : CustomPaint(
                         painter: _PlaceholderPainter(),
                       ),
@@ -226,11 +231,7 @@ class PhotoCardWidget extends StatelessWidget {
           ),
         ),
       ],
-    ).animate(
-      onPlay: (controller) => controller.forward(from: 0),
-    )
-    .saturate(duration: 3000.ms, begin: 0, end: 1, curve: Curves.easeInOutCubic)
-    .fadeIn(duration: 2500.ms, curve: Curves.easeIn);
+    );
   }
 
   Widget _buildBack(BuildContext context) {
