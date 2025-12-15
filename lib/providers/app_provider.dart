@@ -438,6 +438,17 @@ class AppProvider extends ChangeNotifier {
     return true;
   }
 
+  void scratchCoupon(String couponId) {
+    final index = _coupons.indexWhere((c) => c.id == couponId);
+    if (index == -1) return;
+
+    final coupon = _coupons[index];
+    if (coupon.isScratched) return;
+
+    _coupons[index] = coupon.copyWith(isScratched: true);
+    notifyListeners();
+  }
+
   // Review Methods
 
   /// 서버에서 장소별 리뷰 로드

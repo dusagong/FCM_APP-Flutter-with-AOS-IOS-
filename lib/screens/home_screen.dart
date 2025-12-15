@@ -8,6 +8,7 @@ import 'camera_screen.dart';
 import 'photo_card_list_screen.dart';
 
 import 'package:flutter/services.dart';
+import '../widgets/train_door_page_route.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -251,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const CameraScreen()),
+              TrainDoorPageRoute(page: const CameraScreen()),
             );
           },
         ).animate().fadeIn(delay: 700.ms, duration: 500.ms).slideY(begin: 0.2, end: 0),
@@ -262,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const PhotoCardListScreen()),
+              TrainDoorPageRoute(page: const PhotoCardListScreen()),
             );
           },
         ).animate().fadeIn(delay: 800.ms, duration: 500.ms).slideY(begin: 0.2, end: 0),

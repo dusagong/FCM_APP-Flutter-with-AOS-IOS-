@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/common_widgets.dart';
+import 'package:scratcher/scratcher.dart';
 import 'review_write_screen.dart';
 
 class CouponScreen extends StatelessWidget {
@@ -14,13 +15,13 @@ class CouponScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const CustomAppBar(title: '나의 쿠폰함'),
+      appBar: CustomAppBar(title: '나의 쿠폰함'),
       body: Consumer<AppProvider>(
         builder: (context, provider, _) {
           final coupons = provider.coupons;
 
           if (coupons.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.local_offer_rounded,
               title: '아직 받은 쿠폰이 없습니다',
               subtitle: '만남승강장에서 쿠폰을 받아보세요!',
@@ -128,83 +129,17 @@ class _CouponCard extends StatelessWidget {
                 ),
                 // Right Main Area
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          coupon.placeName,
-                          style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                  child: (coupon.isUsed || coupon.isScratched)
+                      ? _buildCouponContent(context)
+                      : Scratcher(
+                          brushSize: 30,
+                          threshold: 40,
+                          color: Colors.grey[300]!,
+                          onThreshold: () {
+                             context.read<AppProvider>().scratchCoupon(coupon.id);
+                          },
+                          child: _buildCouponContent(context, isHidden: true),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          coupon.description,
-                          style: AppTypography.titleMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: coupon.isUsed
-                                ? AppColors.textTertiary
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Info Row
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: AppColors.textTertiary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${coupon.province} ${coupon.city}',
-                              style: AppTypography.bodySmall.copyWith(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                         Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_outlined,
-                              size: 14,
-                              color: AppColors.textTertiary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              coupon.isUsed
-                                  ? '사용: ${coupon.formattedUsedDate}'
-                                  : '발급: ${coupon.formattedReceivedDate}',
-                              style: AppTypography.bodySmall.copyWith(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        // Button if active
-                        if (!coupon.isUsed) ...[
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 36,
-                            child: ElevatedButton(
-                              onPressed: () => _showUseCouponModal(context),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondary,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: EdgeInsets.zero,
-                              ),
-                              child: const Text('사용하기', style: TextStyle(fontSize: 13)),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -215,6 +150,86 @@ class _CouponCard extends StatelessWidget {
           delay: Duration(milliseconds: 100 * index),
           duration: 300.ms,
         ).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildCouponContent(BuildContext context, {bool isHidden = false}) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            coupon.placeName,
+            style: AppTypography.labelMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            coupon.description,
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.bold,
+              color: coupon.isUsed
+                  ? AppColors.textTertiary
+                  : AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Info Row
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${coupon.province} ${coupon.city}',
+                style: AppTypography.bodySmall.copyWith(fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+           Row(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                coupon.isUsed
+                    ? '사용: ${coupon.formattedUsedDate}'
+                    : '발급: ${coupon.formattedReceivedDate}',
+                style: AppTypography.bodySmall.copyWith(fontSize: 12),
+              ),
+            ],
+          ),
+          // Button if active
+          if (!coupon.isUsed) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 36,
+              child: ElevatedButton(
+                onPressed: () => _showUseCouponModal(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Text('사용하기', style: TextStyle(fontSize: 13)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   void _showUseCouponModal(BuildContext context) {

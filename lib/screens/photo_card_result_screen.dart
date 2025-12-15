@@ -11,6 +11,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../widgets/common_widgets.dart';
+import '../widgets/train_door_page_route.dart';
 import '../services/travel_api_service.dart';
 import '../widgets/photo_card_widget.dart';
 import 'meeting_platform_loading_screen.dart';
@@ -150,8 +151,8 @@ class _PhotoCardResultScreenState extends State<PhotoCardResultScreen>
         // 검증 성공: 만남승강장으로 이동
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => MeetingPlatformLoadingScreen(
+          TrainDoorPageRoute(
+            page: MeetingPlatformLoadingScreen(
               photoCard: widget.photoCard,
             ),
           ),

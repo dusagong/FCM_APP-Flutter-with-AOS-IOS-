@@ -8,6 +8,7 @@ class Coupon {
   final DateTime receivedAt;
   final DateTime? usedAt;
   final bool isUsed;
+  final bool isScratched;
 
   Coupon({
     required this.id,
@@ -19,6 +20,7 @@ class Coupon {
     required this.receivedAt,
     this.usedAt,
     this.isUsed = false,
+    this.isScratched = false,
   });
 
   String get formattedReceivedDate {
@@ -40,6 +42,7 @@ class Coupon {
     DateTime? receivedAt,
     DateTime? usedAt,
     bool? isUsed,
+    bool? isScratched,
   }) {
     return Coupon(
       id: id ?? this.id,
@@ -51,6 +54,7 @@ class Coupon {
       receivedAt: receivedAt ?? this.receivedAt,
       usedAt: usedAt ?? this.usedAt,
       isUsed: isUsed ?? this.isUsed,
+      isScratched: isScratched ?? this.isScratched,
     );
   }
 
@@ -65,6 +69,7 @@ class Coupon {
       'receivedAt': receivedAt.toIso8601String(),
       'usedAt': usedAt?.toIso8601String(),
       'isUsed': isUsed,
+      'isScratched': isScratched,
     };
   }
 
@@ -79,6 +84,7 @@ class Coupon {
       receivedAt: DateTime.parse(json['receivedAt']),
       usedAt: json['usedAt'] != null ? DateTime.parse(json['usedAt']) : null,
       isUsed: json['isUsed'] ?? false,
+      isScratched: json['isScratched'] ?? false,
     );
   }
 }
