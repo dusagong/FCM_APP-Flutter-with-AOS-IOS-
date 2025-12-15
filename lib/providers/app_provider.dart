@@ -439,20 +439,134 @@ class AppProvider extends ChangeNotifier {
   }
 
   // Review Methods
+
+  /// 서버에서 장소별 리뷰 로드
+  Future<List<Review>> loadReviewsByPlace(String placeId) async {
+    try {
+      final result = await TravelApiService.getReviewsByPlace(placeId);
+      // 로컬 캐시 업데이트 (해당 장소 리뷰만)
+      _reviews.removeWhere((r) => r.placeId == placeId);
+      _reviews.insertAll(0, result.reviews);
+      notifyListeners();
+      return result.reviews;
+    } catch (e) {
+      print('리뷰 로드 에러: $e');
+      return [];
+    }
+  }
+
+  /// 서버에서 내 리뷰 로드
+  Future<List<Review>> loadMyReviews(String userId) async {
+    try {
+      final result = await TravelApiService.getMyReviews(userId);
+      // 로컬 캐시 업데이트
+      _reviews = result.reviews;
+      notifyListeners();
+      return result.reviews;
+    } catch (e) {
+      print('내 리뷰 로드 에러: $e');
+      return [];
+    }
+  }
+
+  /// 서버에서 전체 리뷰 로드
+  Future<List<Review>> loadAllReviews({int limit = 50, int offset = 0}) async {
+    try {
+      final result = await TravelApiService.getAllReviews(limit: limit, offset: offset);
+      if (offset == 0) {
+        _reviews = result.reviews;
+      } else {
+        _reviews.addAll(result.reviews);
+      }
+      notifyListeners();
+      return result.reviews;
+    } catch (e) {
+      print('전체 리뷰 로드 에러: $e');
+      return [];
+    }
+  }
+
+  /// 로컬 캐시에서 장소별 리뷰 가져오기
   List<Review> getReviewsByPlace(String placeId) {
     return _reviews.where((r) => r.placeId == placeId).toList();
   }
 
+  /// 서버에서 장소 평균 별점 가져오기
+  Future<PlaceRating?> fetchPlaceRating(String placeId) async {
+    try {
+      return await TravelApiService.getPlaceRating(placeId);
+    } catch (e) {
+      print('장소 평점 로드 에러: $e');
+      return null;
+    }
+  }
 
+  /// 리뷰 생성 (서버 연동)
+  Future<Review?> createReview({
+    required String placeId,
+    required String placeName,
+    required int rating,
+    required String content,
+    List<String> imagePaths = const [],
+    String? userId,
+    String? photoCardId,
+  }) async {
+    try {
+      // 이미지 경로를 File 객체로 변환
+      final images = imagePaths.map((path) => File(path)).toList();
 
+      final review = await TravelApiService.createReview(
+        placeId: placeId,
+        placeName: placeName,
+        rating: rating,
+        content: content,
+        images: images,
+        userId: userId,
+        photoCardId: photoCardId ?? _currentPhotoCard?.id,
+      );
+
+      // 로컬 캐시에 추가
+      _reviews.insert(0, review);
+
+      // Mark reviewable place as reviewed
+      final reviewableIndex = _reviewablePlaces.indexWhere(
+        (r) => (r.placeId == placeId || r.placeName == placeName) && !r.hasReviewed,
+      );
+      if (reviewableIndex != -1) {
+        _reviewablePlaces[reviewableIndex] = ReviewablePlace(
+          placeId: _reviewablePlaces[reviewableIndex].placeId,
+          placeName: _reviewablePlaces[reviewableIndex].placeName,
+          visitedAt: _reviewablePlaces[reviewableIndex].visitedAt,
+          hasReviewed: true,
+        );
+      }
+
+      notifyListeners();
+      return review;
+    } catch (e) {
+      print('리뷰 생성 에러: $e');
+      return null;
+    }
+  }
+
+  /// 리뷰 삭제 (서버 연동)
+  Future<bool> deleteReview(String reviewId) async {
+    try {
+      final success = await TravelApiService.deleteReview(reviewId);
+      if (success) {
+        _reviews.removeWhere((r) => r.id == reviewId);
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      print('리뷰 삭제 에러: $e');
+      return false;
+    }
+  }
+
+  /// 리뷰 추가 (로컬 전용 - 이전 버전 호환)
   void addReview(Review review) {
     _reviews.insert(0, review);
-
-    // Update place review count
-    final placeIndex = _places.indexWhere((p) => p.id == review.placeId);
-    if (placeIndex != -1) {
-      // In a real app, we'd update the place object
-    }
 
     // Mark reviewable place as reviewed (placeId 또는 placeName으로 매칭)
     final reviewableIndex = _reviewablePlaces.indexWhere(

@@ -1,7 +1,9 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/recommendation.dart';
+import '../models/review.dart';
 
 class TravelApiService {
   static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080/api/v1';
@@ -658,6 +660,281 @@ class TravelApiService {
     } catch (e) {
       print('💥 [EXCEPTION] 추천 결과 조회 에러: $e');
       throw Exception('추천 결과 조회 에러: $e');
+    }
+  }
+
+  // ============ Review API ============
+
+  /// 리뷰 생성 (이미지 포함)
+  /// multipart/form-data로 전송
+  static Future<Review> createReview({
+    required String placeId,
+    required String placeName,
+    required int rating,
+    required String content,
+    required List<File> images,
+    String? userId,
+    String? photoCardId,
+  }) async {
+    try {
+      final url = '$baseUrl/reviews';
+      print('📤 [API REQUEST] POST $url (multipart)');
+
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+
+      // Form fields
+      request.fields['place_id'] = placeId;
+      request.fields['place_name'] = placeName;
+      request.fields['rating'] = rating.toString();
+      request.fields['content'] = content;
+      if (userId != null) request.fields['user_id'] = userId;
+      if (photoCardId != null) request.fields['photo_card_id'] = photoCardId;
+
+      // Image files
+      for (final image in images) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'images',
+          image.path,
+        ));
+      }
+
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 리뷰 생성 시간 초과');
+          throw Exception('리뷰 생성 시간 초과');
+        },
+      );
+
+      final response = await http.Response.fromStream(streamedResponse);
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 리뷰 생성 완료: ${data['id']}');
+        return Review.fromJson(data);
+      } else {
+        print('❌ [ERROR] 리뷰 생성 실패: ${response.statusCode}');
+        print('❌ [ERROR BODY] ${utf8.decode(response.bodyBytes)}');
+        throw Exception('리뷰 생성 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 리뷰 생성 에러: $e');
+      throw Exception('리뷰 생성 에러: $e');
+    }
+  }
+
+  /// 리뷰 단건 조회
+  static Future<Review> getReview(String reviewId) async {
+    try {
+      final url = '$baseUrl/reviews/$reviewId';
+      print('📤 [API REQUEST] GET $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 리뷰 조회 시간 초과');
+          throw Exception('리뷰 조회 시간 초과');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 리뷰 조회 완료');
+        return Review.fromJson(data);
+      } else if (response.statusCode == 404) {
+        print('❌ [ERROR] 리뷰를 찾을 수 없습니다');
+        throw Exception('리뷰를 찾을 수 없습니다');
+      } else {
+        print('❌ [ERROR] 리뷰 조회 실패: ${response.statusCode}');
+        throw Exception('리뷰 조회 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 리뷰 조회 에러: $e');
+      throw Exception('리뷰 조회 에러: $e');
+    }
+  }
+
+  /// 장소별 리뷰 목록 조회
+  static Future<ReviewListResult> getReviewsByPlace(
+    String placeId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    try {
+      final url = '$baseUrl/reviews/place/$placeId?limit=$limit&offset=$offset';
+      print('📤 [API REQUEST] GET $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 리뷰 목록 조회 시간 초과');
+          throw Exception('리뷰 목록 조회 시간 초과');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 리뷰 목록 조회: ${data['total_count']}개');
+        return ReviewListResult.fromJson(data);
+      } else {
+        print('❌ [ERROR] 리뷰 목록 조회 실패: ${response.statusCode}');
+        throw Exception('리뷰 목록 조회 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 리뷰 목록 조회 에러: $e');
+      throw Exception('리뷰 목록 조회 에러: $e');
+    }
+  }
+
+  /// 사용자별 리뷰 목록 조회 (내 리뷰)
+  static Future<ReviewListResult> getMyReviews(
+    String userId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    try {
+      final url = '$baseUrl/reviews/user/$userId?limit=$limit&offset=$offset';
+      print('📤 [API REQUEST] GET $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 내 리뷰 조회 시간 초과');
+          throw Exception('내 리뷰 조회 시간 초과');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 내 리뷰 조회: ${data['total_count']}개');
+        return ReviewListResult.fromJson(data);
+      } else {
+        print('❌ [ERROR] 내 리뷰 조회 실패: ${response.statusCode}');
+        throw Exception('내 리뷰 조회 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 내 리뷰 조회 에러: $e');
+      throw Exception('내 리뷰 조회 에러: $e');
+    }
+  }
+
+  /// 전체 리뷰 목록 조회
+  static Future<ReviewListResult> getAllReviews({
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    try {
+      final url = '$baseUrl/reviews?limit=$limit&offset=$offset';
+      print('📤 [API REQUEST] GET $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 전체 리뷰 조회 시간 초과');
+          throw Exception('전체 리뷰 조회 시간 초과');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 전체 리뷰 조회: ${data['total_count']}개');
+        return ReviewListResult.fromJson(data);
+      } else {
+        print('❌ [ERROR] 전체 리뷰 조회 실패: ${response.statusCode}');
+        throw Exception('전체 리뷰 조회 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 전체 리뷰 조회 에러: $e');
+      throw Exception('전체 리뷰 조회 에러: $e');
+    }
+  }
+
+  /// 장소별 평점 조회
+  static Future<PlaceRating> getPlaceRating(String placeId) async {
+    try {
+      final url = '$baseUrl/reviews/place/$placeId/rating';
+      print('📤 [API REQUEST] GET $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 평점 조회 시간 초과');
+          throw Exception('평점 조회 시간 초과');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('✅ [SUCCESS] 평점 조회: ${data['average_rating']}');
+        return PlaceRating.fromJson(data);
+      } else {
+        print('❌ [ERROR] 평점 조회 실패: ${response.statusCode}');
+        throw Exception('평점 조회 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 평점 조회 에러: $e');
+      throw Exception('평점 조회 에러: $e');
+    }
+  }
+
+  /// 리뷰 삭제
+  static Future<bool> deleteReview(String reviewId) async {
+    try {
+      final url = '$baseUrl/reviews/$reviewId';
+      print('📤 [API REQUEST] DELETE $url');
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('⏱️ [TIMEOUT] 리뷰 삭제 시간 초과');
+          throw Exception('리뷰 삭제 시간 초과');
+        },
+      );
+
+      print('📥 [API RESPONSE] Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        print('✅ [SUCCESS] 리뷰 삭제 완료');
+        return true;
+      } else if (response.statusCode == 404) {
+        print('❌ [ERROR] 리뷰를 찾을 수 없습니다');
+        return false;
+      } else {
+        print('❌ [ERROR] 리뷰 삭제 실패: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('💥 [EXCEPTION] 리뷰 삭제 에러: $e');
+      return false;
     }
   }
 }

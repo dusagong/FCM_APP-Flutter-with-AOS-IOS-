@@ -55,7 +55,7 @@ class _MeetingPlatformLoadingScreenState
 
   /// 세션 상태 Polling
   Future<void> _pollSessionStatus() async {
-    const maxRetries = 180; // 최대 3분 (1초 간격)
+    const maxRetries = 600; // 최대 10분 (1초 간격) - LLM 응답 지연 대응
     int retryCount = 0;
 
     while (retryCount < maxRetries && mounted && !_isCompleted && !_hasError) {
