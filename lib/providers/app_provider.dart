@@ -491,16 +491,6 @@ class AppProvider extends ChangeNotifier {
     return _reviews.where((r) => r.placeId == placeId).toList();
   }
 
-  /// 서버에서 장소 평균 별점 가져오기
-  Future<PlaceRating?> fetchPlaceRating(String placeId) async {
-    try {
-      return await TravelApiService.getPlaceRating(placeId);
-    } catch (e) {
-      print('장소 평점 로드 에러: $e');
-      return null;
-    }
-  }
-
   /// 리뷰 생성 (서버 연동)
   Future<Review?> createReview({
     required String placeId,

@@ -870,39 +870,6 @@ class TravelApiService {
     }
   }
 
-  /// 장소별 평점 조회
-  static Future<PlaceRating> getPlaceRating(String placeId) async {
-    try {
-      final url = '$baseUrl/reviews/place/$placeId/rating';
-      print('📤 [API REQUEST] GET $url');
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json; charset=utf-8'},
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          print('⏱️ [TIMEOUT] 평점 조회 시간 초과');
-          throw Exception('평점 조회 시간 초과');
-        },
-      );
-
-      print('📥 [API RESPONSE] Status: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        print('✅ [SUCCESS] 평점 조회: ${data['average_rating']}');
-        return PlaceRating.fromJson(data);
-      } else {
-        print('❌ [ERROR] 평점 조회 실패: ${response.statusCode}');
-        throw Exception('평점 조회 실패: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('💥 [EXCEPTION] 평점 조회 에러: $e');
-      throw Exception('평점 조회 에러: $e');
-    }
-  }
-
   /// 리뷰 삭제
   static Future<bool> deleteReview(String reviewId) async {
     try {
