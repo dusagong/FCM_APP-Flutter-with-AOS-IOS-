@@ -1,6 +1,8 @@
 /// 여행 추천 API 응답 모델
 /// travel-server /api/v1/ask 엔드포인트용
 
+import 'package:flutter/foundation.dart';
+
 /// 리스트 뷰용 - 지도 연동 가능한 장소 정보
 class SpotWithLocation {
   final String name;
@@ -71,6 +73,7 @@ class CourseStop {
   final String? time; // "오전 10시"
   final String? duration; // "1시간"
   final String? travelTimeToNext; // "다음 장소까지 약 10분"
+  final double? distanceToNextKm; // 다음 장소까지 실제 거리 (km)
   final String? reason; // 커플에게 추천하는 이유
   final String? tip; // 방문 팁
 
@@ -85,11 +88,18 @@ class CourseStop {
     this.time,
     this.duration,
     this.travelTimeToNext,
+    this.distanceToNextKm,
     this.reason,
     this.tip,
   });
 
   factory CourseStop.fromJson(Map<String, dynamic> json) {
+    final distanceRaw = json['distance_to_next_km'];
+    final distanceParsed = distanceRaw?.toDouble();
+    // Debug: 거리 파싱 확인
+    if (distanceRaw != null) {
+      debugPrint('[CourseStop] ${json['name']}: distance_to_next_km raw=$distanceRaw, parsed=$distanceParsed');
+    }
     return CourseStop(
       order: json['order'] ?? 0,
       name: json['name'] ?? '',
@@ -101,6 +111,7 @@ class CourseStop {
       time: json['time'],
       duration: json['duration'],
       travelTimeToNext: json['travel_time_to_next'],
+      distanceToNextKm: distanceParsed,
       reason: json['reason'],
       tip: json['tip'],
     );
@@ -118,6 +129,7 @@ class CourseStop {
       'time': time,
       'duration': duration,
       'travel_time_to_next': travelTimeToNext,
+      'distance_to_next_km': distanceToNextKm,
       'reason': reason,
       'tip': tip,
     };
@@ -138,12 +150,14 @@ class RecommendedCourse {
   final String title;
   final List<CourseStop> stops;
   final String? totalDuration;
+  final double? totalDistanceKm; // 총 이동 거리 (km)
   final String? summary;
 
   RecommendedCourse({
     required this.title,
     required this.stops,
     this.totalDuration,
+    this.totalDistanceKm,
     this.summary,
   });
 
@@ -155,6 +169,7 @@ class RecommendedCourse {
               .toList() ??
           [],
       totalDuration: json['total_duration'],
+      totalDistanceKm: json['total_distance_km']?.toDouble(),
       summary: json['summary'],
     );
   }
@@ -164,6 +179,7 @@ class RecommendedCourse {
       'title': title,
       'stops': stops.map((e) => e.toJson()).toList(),
       'total_duration': totalDuration,
+      'total_distance_km': totalDistanceKm,
       'summary': summary,
     };
   }
